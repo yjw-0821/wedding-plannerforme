@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <!-- Firebase 자가 연동 마법사 모달 (실시간 데이터베이스 맞춤 개편) -->
+    <!-- Firebase 자가 연동 마법사 모달 -->
     <div id="firebase-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-pink-100/50 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-100 pb-3">
@@ -81,14 +81,14 @@
                 <p class="font-bold text-gray-700 text-xs text-rose-500">🚨 중요: 구글 콘솔 사이트 필수 설정 3가지!</p>
                 <ol class="list-decimal pl-4 space-y-1.5 bg-rose-50/50 p-3 rounded-xl border border-rose-100">
                     <li><strong>Authentication</strong> 메뉴 ➔ <strong>Sign-in method</strong> ➔ <strong>Google(구글)</strong>을 꼭 '사용 설정(활성화)'해 주세요!</li>
-                    <li><strong>Authentication</strong> 메뉴 ➔ <strong>Settings</strong> ➔ <strong>승인된 도메인</strong>에 예진님의 깃허브 도메인(<code class="bg-white px-1 font-mono text-weddingGold-600">yjw-0821.github.io</code>)을 추가해 주세요!</li>
+                    <li><strong>Authentication</strong> 메뉴 ➔ <strong>Settings</strong> ➔ <strong>승인된 도메인</strong>에 깃허브 도메인을 추가해 주세요!</li>
                     <li>카드 등록 없이 3초만에 생성 가능한 <strong>Realtime Database</strong>를 생성하고 보안 규칙을 <strong>'테스트 모드'</strong>로 꼭 켜주세요!</li>
                 </ol>
             </div>
 
             <div class="space-y-1">
-                <label class="block text-[11px] font-bold text-gray-600">📋 Firebase Config 붙여넣기 (코드 통째로 복사해서 넣어도 무방합니다):</label>
-                <textarea id="input-firebase-config" placeholder='const firebaseConfig = {\n  apiKey: "AIzaSy...",\n  authDomain: "your-app.firebaseapp.com",\n  databaseURL: "https://your-app.firebaseio.com",\n  projectId: "your-app",\n  appId: "..."\n};' class="w-full h-32 bg-gray-50 border border-gray-200 rounded-2xl p-3 text-[10px] font-mono focus:outline-none focus:ring-1 focus:ring-weddingGold-500"></textarea>
+                <label class="block text-[11px] font-bold text-gray-600">📋 Firebase Config 붙여넣기:</label>
+                <textarea id="input-firebase-config" placeholder='const firebaseConfig = {\n  apiKey: "AIzaSy...",\n  authDomain: "your-app.firebaseapp.com",\n  ...\n};' class="w-full h-32 bg-gray-50 border border-gray-200 rounded-2xl p-3 text-[10px] font-mono focus:outline-none focus:ring-1 focus:ring-weddingGold-500"></textarea>
             </div>
 
             <div class="flex gap-2 pt-2">
@@ -117,7 +117,7 @@
             
             <!-- 실시간 변경 가능한 메인 타이틀 & 서브 타이틀 -->
             <h1 id="header-main-title" class="serif-title text-3xl font-bold tracking-wide text-gray-800 mb-1">Our Wedding Journal</h1>
-            <p id="header-sub-title" class="text-xs text-gray-400 mb-5">예진이의 소중한 결혼 준비 기록장</p>
+            <p id="header-sub-title" class="text-xs text-gray-400 mb-5">소중한 결혼 준비 기록장</p>
             
             <!-- 실시간 디데이 -->
             <div class="bg-[#F4F1DE]/70 rounded-2xl p-4 mb-4 border border-dashed border-weddingGold-500/30 relative">
@@ -125,7 +125,7 @@
                 <span id="dday-count" class="text-3xl font-extrabold text-[#E07A5F] tracking-wide">D-457</span>
                 
                 <!-- 설정 변경 트리거 -->
-                <button onclick="toggleSettingsEditor()" class="absolute top-3 right-3 text-gray-400 hover:text-weddingGold-500 transition-all" title="기록장 타이틀 및 예식일 수정">
+                <button onclick="toggleSettingsEditor()" class="absolute top-3 right-3 text-gray-400 hover:text-weddingGold-500 transition-all" title="기록장 타이틀 및 환경설정">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
             </div>
@@ -151,10 +151,27 @@
                     <input type="text" id="input-sub-title" placeholder="예진이의 소중한 결혼 준비 기록장" class="w-full bg-white border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-weddingGold-500">
                 </div>
 
-                <div class="flex gap-2 justify-between pt-2 border-t border-peach-200/30">
-                    <button onclick="openFirebaseModal()" class="text-[10px] text-weddingGold-600 underline font-semibold">🔗 클라우드 데이터베이스 설정</button>
+                <!-- 🚀 신규: 데이터 백업 및 복구 영역 -->
+                <div class="mt-4 border-t border-peach-200/50 pt-3">
+                    <h4 class="text-[11px] font-bold text-gray-500 mb-2">💾 데이터 백업 및 복구 (오프라인 공유용)</h4>
+                    <div class="flex gap-2">
+                        <button onclick="exportData()" class="flex-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-600 text-[10px] font-bold py-2 rounded-xl transition-all shadow-sm">
+                            ⬇️ 백업 파일 다운로드
+                        </button>
+                        <button onclick="document.getElementById('import-file').click()" class="flex-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-600 text-[10px] font-bold py-2 rounded-xl transition-all shadow-sm">
+                            ⬆️ 백업 파일 불러오기
+                        </button>
+                        <input type="file" id="import-file" accept=".json" onchange="importData(event)" class="hidden">
+                    </div>
+                    <p class="text-[9.5px] text-gray-400 mt-2 leading-relaxed">
+                        로그인 없이 기록장을 공유하려면 백업 파일을 다운로드한 뒤, 다른 기기에서 불러오기 하세요!
+                    </p>
+                </div>
+
+                <div class="flex gap-2 justify-between pt-3 border-t border-peach-200/50">
+                    <button onclick="openFirebaseModal()" class="text-[10px] text-weddingGold-600 underline font-semibold">🔗 클라우드 DB 연동</button>
                     <div class="flex gap-1.5">
-                        <button onclick="toggleSettingsEditor()" class="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition-all">취소</button>
+                        <button onclick="toggleSettingsEditor()" class="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition-all">닫기</button>
                         <button onclick="saveSettings()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">저장하기</button>
                     </div>
                 </div>
@@ -165,11 +182,11 @@
                 <div class="flex items-center gap-2">
                     <span id="sync-icon" class="text-emerald-600 flex items-center gap-1.5 text-xs font-semibold">
                         <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
-                        <span id="sync-text">자동 클라우드 보관 중</span>
+                        <span id="sync-text">자동 로컬 보관 중</span>
                     </span>
                 </div>
                 <button id="auth-btn" class="text-xs font-bold text-weddingSage bg-weddingGold-100 hover:bg-weddingGold-500/20 px-3 py-1.5 rounded-lg transition-all border border-weddingGold-500/10">
-                    구글 계정 연동하기
+                    구글 연동(선택)
                 </button>
             </div>
             <div id="user-info" class="text-[10px] text-gray-400 mt-2 text-right hidden"></div>
@@ -290,7 +307,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <select id="ai-invitation-vibe" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent text-gray-500">
                         <option value="정중하고 고급스러운">💎 정중하고 고급스럽게</option>
-                        <option value="감성적이고 다스한">🌸 감성적이고 따뜻하게</option>
+                        <option value="감성적이고 따스한">🌸 감성적이고 따뜻하게</option>
                         <option value="귀엽고 발랄한">🌱 귀엽고 발랄하게</option>
                         <option value="깔끔하고 정량적인">✉️ 군더더기 없이 심플하게</option>
                     </select>
@@ -349,7 +366,8 @@
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         // 1. Firebase 초기화
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-wedding-planner';
+        const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-wedding-planner';
+        const appId = rawAppId.replace(/[.#$\[\]]/g, '_'); // Firebase 경로 제약조건 해결을 위한 특수문자 치환
         let useFirebase = false;
         let db, auth;
         let firebaseConfig = null;
@@ -358,13 +376,13 @@
         let localState = {
             weddingDate: "2027-08-21",
             mainTitle: "Our Wedding Journal",
-            subTitle: "예진이의 소중한 결혼 준비 기록장",
+            subTitle: "소중한 결혼 준비 기록장",
             periods: ["D-15개월", "D-12개월", "D-10개월", "D-9개월", "D-6개월", "D-4개월", "D-3개월", "D-1개월", "기타 일정"],
             checklist: [
                 { id: "todo1", title: "마음에 드는 베뉴 웨딩홀 선정 및 계약 🏛️", checked: true, period: "D-15개월", memo: "아펠가모 선릉 / 12시 단독홀 타임 완료 (식대 6.5만 원 협의)" },
                 { id: "todo2", title: "예약 경쟁 치열한 본식 스냅작가 & DVD 가계약 📸", checked: false, period: "D-15개월", memo: "인스타 @wedding_snap_official 예약 오픈 대기 중" },
                 { id: "todo3", title: "인기 있는 제주 스냅 또는 드레스 스튜디오 예약 완료 👗", checked: false, period: "D-12개월" },
-                { id: "todo4", title: "가성비 뛰어난 동행/비동행 스드메 상담 및 플래너 계약 💄", checked: false, period: "D-10개월", memo: "다이렉트웨딩 김은지 플래너 실장 (연락처: 010-1234-5678)" },
+                { id: "todo4", title: "가성비 뛰어난 동행/비동행 스드메 상담 및 플래너 계약 💄", checked: false, period: "D-10개월", memo: "다이렉트웨딩 플래너 실장" },
                 { id: "todo5", title: "신혼여행 항공편 특가 모니터링 및 선예매 완료 ✈️", checked: false, period: "D-9개월" },
                 { id: "todo6", title: "맞춤 예복 브랜드 상담 및 계약 완료 🤵", checked: false, period: "D-6개월" },
                 { id: "todo7", title: "가장 오래 끼게 될 웨딩밴드 브랜드 오더 완료 💍", checked: false, period: "D-4개월" },
@@ -415,7 +433,7 @@
                 syncIcon.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span>동기화 및 안전 저장 완료</span>`;
             } else {
                 syncIcon.className = "text-gray-400 flex items-center gap-1.5 text-xs font-semibold";
-                syncIcon.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> <span>로컬 디스크 임시 오프라인 모드</span>`;
+                syncIcon.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> <span>로컬 디스크 자동 저장 모드</span>`;
             }
         }
 
@@ -520,7 +538,7 @@
             }
 
             if (user.isAnonymous) {
-                authBtn.innerText = "구글 계정 연동하기 🔒";
+                authBtn.innerText = "구글 연동하기 🔒";
                 userInfo.innerHTML = `임시 브라우저 계정으로 접속 중 (UID: ${user.uid.slice(0, 8)}...)`;
                 userInfo.classList.remove('hidden');
             } else {
@@ -557,24 +575,25 @@
             }
         };
 
-        // Realtime Database 쓰기 동기화 셋팅 (RULE 1 준수)
+        // 데이터를 로컬과 클라우드에 모두 저장
         window.saveData = async () => {
+            // 기본적으로 localStorage에는 항상 백업합니다.
+            localStorage.setItem('wedding_planner_local_state_v2', JSON.stringify(localState));
+
             if (!useFirebase || !currentUser) {
-                localStorage.setItem('wedding_planner_local_state_v2', JSON.stringify(localState));
                 updateSyncStatus('offline');
                 return;
             }
 
             updateSyncStatus('saving');
             try {
-                // Strict Paths: /artifacts/{appId}/users/{userId}/weddingState/main
                 const dbRef = ref(db, `artifacts/${appId}/users/${currentUser.uid}/weddingState/main`);
                 await set(dbRef, localState);
                 updateSyncStatus('synced');
             } catch (err) {
                 console.error("Cloud saving error: ", err);
                 updateSyncStatus('offline');
-                showToast("서버 저장에 실패했습니다. 임시로 브라우저에 백업됩니다.", "error");
+                showToast("서버 저장에 실패했습니다. 대신 브라우저에 안전하게 백업되었습니다.", "error");
             }
         };
 
@@ -620,6 +639,45 @@
             renderApp();
             saveData();
             showToast("기록장 설정이 저장되었습니다! 💖", "success");
+        };
+
+        // 🚀 신규: 데이터 백업 및 복구 기능 
+        window.exportData = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localState));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "our_wedding_journal_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            showToast("데이터가 파일로 기기에 저장되었습니다! 💾", "success");
+        };
+
+        window.importData = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (importedState && importedState.weddingDate && importedState.checklist) {
+                        localState = importedState;
+                        saveData(); 
+                        renderApp(); 
+                        updatePeriodDropdown();
+                        showToast("백업 기록장을 성공적으로 불러왔습니다! 🌸", "success");
+                        // 설정창 닫기
+                        document.getElementById('settings-editor-box').classList.add('hidden');
+                    } else {
+                        showToast("올바른 웨딩 플래너 백업 파일(JSON)이 아닙니다.", "error");
+                    }
+                } catch (err) {
+                    showToast("파일을 읽는 중 오류가 발생했습니다.", "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
         };
 
         function renderDDay() {
@@ -1332,51 +1390,6 @@
                 }
             });
         };
-        [input]
-        // 💾 데이터 파일로 내보내기 (다운로드)
-window.exportData = () => {
-    // 로컬 데이터를 JSON 문자열로 변환
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localState));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    
-    // 다운로드되는 파일명 설정
-    downloadAnchorNode.setAttribute("download", "our_wedding_journal_backup.json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    
-    showToast("데이터가 안전하게 기기에 다운로드되었습니다! 💾", "success");
-};
-
-// 📂 파일 불러와서 데이터 복구하기
-window.importData = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const importedState = JSON.parse(e.target.result);
-            // 기본적인 데이터 유효성 검사 (웨딩 앱 백업 파일이 맞는지 확인)
-            if (importedState && importedState.weddingDate && importedState.checklist) {
-                localState = importedState;
-                saveData(); // 로컬 스토리지에 덮어쓰기
-                renderApp(); // 화면 새로고침
-                updatePeriodDropdown();
-                showToast("기록장을 성공적으로 불러왔습니다! 🌸", "success");
-            } else {
-                showToast("올바른 웨딩 플래너 백업 파일이 아닙니다.", "error");
-            }
-        } catch (err) {
-            showToast("파일을 읽는 중 오류가 발생했습니다.", "error");
-        }
-    };
-    reader.readAsText(file);
-    
-    // 파일 선택 초기화 (같은 파일을 다시 불러올 수 있도록)
-    event.target.value = '';
-};
 
         window.onload = async () => {
             const offlineData = localStorage.getItem('wedding_planner_local_state_v2');
@@ -1390,7 +1403,7 @@ window.importData = (event) => {
                 localState.periods = ["D-15개월", "D-12개월", "D-10개월", "D-9개월", "D-6개월", "D-4개월", "D-3개월", "D-1개월", "기타 일정"];
             }
             if (!localState.mainTitle) localState.mainTitle = "Our Wedding Journal";
-            if (!localState.subTitle) localState.subTitle = "예진이의 소중한 결혼 준비 기록장";
+            if (!localState.subTitle) localState.subTitle = "소중한 결혼 준비 기록장";
 
             renderApp();
             updatePeriodDropdown();
@@ -1400,7 +1413,6 @@ window.importData = (event) => {
                 onAuthStateChanged(auth, async (user) => {
                     handleUserLoginUI(user);
                     if (user) {
-                        // Realtime Database 실시간 갱신 수신 동기화 리스너 바인딩 (RULE 3 준수)
                         const dbRef = ref(db, `artifacts/${appId}/users/${user.uid}/weddingState/main`);
                         onValue(dbRef, (snapshot) => {
                             const data = snapshot.val();
@@ -1410,7 +1422,7 @@ window.importData = (event) => {
                                     localState.periods = ["D-15개월", "D-12개월", "D-10개월", "D-9개월", "D-6개월", "D-4개월", "D-3개월", "D-1개월", "기타 일정"];
                                 }
                                 if (!localState.mainTitle) localState.mainTitle = "Our Wedding Journal";
-                                if (!localState.subTitle) localState.subTitle = "예진이의 소중한 결혼 준비 기록장";
+                                if (!localState.subTitle) localState.subTitle = "소중한 결혼 준비 기록장";
                                 renderApp();
                                 updatePeriodDropdown();
                                 updateSyncStatus('synced');
