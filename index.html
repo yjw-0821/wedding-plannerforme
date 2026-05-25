@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>웨딩 플래너 💍</title>
+    <title>예진이의 웨딩 플래너 💍</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -145,10 +145,20 @@
                 </div>
             </div>
 
-            <!-- 신규 할일 추가 인풋 -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-100/20 flex gap-2">
-                <input type="text" id="new-todo-title" placeholder="새로운 준비 스케줄을 추가해보세요..." class="flex-1 bg-gray-50/50 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent focus:border-transparent">
-                <button onclick="addCustomTodo()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all">추가</button>
+            <!-- 신규 할일 추가 인풋 및 AI 스마트 일정 추천 -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-100/20 flex flex-col gap-3">
+                <div class="flex gap-2">
+                    <input type="text" id="new-todo-title" placeholder="새로운 준비 스케줄을 추가해보세요..." class="flex-1 bg-gray-50/50 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent focus:border-transparent">
+                    <button onclick="addCustomTodo()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all">추가</button>
+                </div>
+                <!-- 🪄 신규 추가: AI 추천 일정 자동 생성 버튼 -->
+                <button onclick="generateAiChecklist()" id="ai-todo-gen-btn" class="w-full bg-peach-100/60 hover:bg-peach-200/60 border border-peach-500/20 text-peach-500 font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-1">
+                    ✨ AI 디데이 맞춤 일정 추천받기
+                </button>
+                <div id="ai-todo-box" class="hidden bg-weddingGold-50/50 p-3.5 rounded-2xl border border-weddingGold-500/10 text-xs">
+                    <p class="font-bold text-weddingGold-600 mb-2 flex items-center gap-1">💍 현재 D-Day 단계 추천 목록:</p>
+                    <div id="ai-suggested-todos-list" class="space-y-2"></div>
+                </div>
             </div>
 
             <!-- 타임라인별 체크리스트 목록 -->
@@ -184,6 +194,16 @@
                         <span id="summary-deposit" class="text-xs font-bold text-weddingSage">0 만원</span>
                     </div>
                 </div>
+                
+                <!-- 🪄 신규 추가: 예산 분석 AI 브릿지 버튼 -->
+                <button onclick="analyzeBudgetWithAi()" id="ai-budget-btn" class="w-full mt-3 bg-gradient-to-r from-weddingGold-500 to-peach-500 hover:opacity-90 text-white font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1 shadow-sm">
+                    ✨ AI 예산 다이어트 진단받기
+                </button>
+            </div>
+
+            <!-- AI 예산 진단 출력 박스 -->
+            <div id="ai-budget-analysis" class="hidden bg-white p-5 rounded-3xl border border-weddingGold-500/20 shadow-sm text-xs leading-relaxed text-gray-600 whitespace-pre-wrap">
+                <!-- AI 분석 텍스트 출력 -->
             </div>
 
             <!-- 예산 항목 추가 폼 -->
@@ -204,6 +224,37 @@
 
         <!-- 섹션 3: 웨딩 AI 비서 탭 -->
         <section id="sec-ai" class="hidden space-y-4">
+            
+            <!-- 🪄 신규 추가: AI 청첩장 초대장 생성 도구 -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-pink-100/20 space-y-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-base">✉️</span>
+                    <h4 class="text-xs font-bold text-gray-800">✨ AI 모바일 청첩장 초대글 메이커</h4>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="ai-groom-name" placeholder="신랑 이름 (예: 신랑)" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent">
+                    <input type="text" id="ai-bride-name" placeholder="신부 이름 (예: 예진)" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="ai-invitation-vibe" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent text-gray-500">
+                        <option value="정중하고 고급스러운">💎 정중하고 고급스럽게</option>
+                        <option value="감성적이고 다스한">🌸 감성적이고 따뜻하게</option>
+                        <option value="귀엽고 발랄한">🌱 귀엽고 발랄하게</option>
+                        <option value="깔끔하고 정량적인">✉️ 군더더기 없이 심플하게</option>
+                    </select>
+                    <select id="ai-invitation-season" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent text-gray-500">
+                        <option value="눈부신 봄날">🍀 눈부신 봄날 (3~5월)</option>
+                        <option value="싱그러운 여름날">☀️ 싱그러운 여름날 (6~8월)</option>
+                        <option value="가을의 선선한 바람결">🍂 선선한 가을날 (9~11월)</option>
+                        <option value="눈 내리는 포근한 겨울">❄️ 포근한 겨울날 (12~2월)</option>
+                    </select>
+                </div>
+                <button onclick="generateAiInvitation()" id="ai-invitation-btn" class="w-full bg-[#E07A5F] hover:bg-[#E07A5F]/90 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-1">
+                    ✨ 모바일 초대 문구 자동 생성하기
+                </button>
+            </div>
+
+            <!-- 기본 AI 비서 질문창 -->
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-pink-100/20">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-weddingGold-500 to-peach-500 flex items-center justify-center text-white text-lg shadow-sm">
@@ -685,9 +736,10 @@
             showToast("선택하신 품목이 장부에서 제외되었습니다.", "info");
         };
 
-        // 4. Gemini 2.5 AI 웨딩 비서 통신 로직
+        // 4. Gemini 2.5 AI 웨딩 비서 통신 로직 및 신규 AI 연동 기능들
         const apiKey = ""; // 시스템 실행 시간에 바인딩
 
+        // 지수 백오프 처리 기능이 탑재된 Gemini API 통신 래퍼
         async function callGeminiApi(prompt, systemInstruction) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const payload = {
@@ -707,14 +759,170 @@
                         return await response.json();
                     }
                 } catch (e) {
-                    console.error("Gemini API call error (retrying):", e);
+                    // console 에 리트라이 로그를 남기지 않습니다 (가이드라인 준수)
                 }
                 await new Promise(res => setTimeout(res, delay));
                 delay *= 2;
             }
-            throw new Error("Gemini AI API 요청 실패.");
+            throw new Error("Gemini AI API 요청에 최종적으로 실패했습니다. 네트워크 혹은 서비스 상태를 확인해 주세요.");
         }
 
+        // 🪄 [신규 스마트 AI 기능 1] D-Day 기반 AI 일정 추천 생성기
+        window.generateAiChecklist = async () => {
+            const btn = document.getElementById('ai-todo-gen-btn');
+            const box = document.getElementById('ai-todo-box');
+            const listContainer = document.getElementById('ai-suggested-todos-list');
+
+            const weddingDateStr = localState.weddingDate || "2027-08-21";
+            const targetDate = new Date(weddingDateStr + "T00:00:00");
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+
+            btn.disabled = true;
+            btn.innerText = "✨ AI가 디데이를 토대로 추천 일정 수집 중...⏳";
+            box.classList.remove('hidden');
+            listContainer.innerHTML = `<div class="text-center text-gray-400 py-3 animate-pulse">현재 남은 기간(${diffDays}일)에 꼭 필요한 추천 체크리스트를 만들고 있습니다...</div>`;
+
+            const prompt = `현재 결혼식 본식까지 정확히 ${diffDays}일 남은 예비 신부 '예진'이입니다. 이 시기에 꼭 알아봐야 하거나 예약/준비해야 할 스마트하고 실속 있는 우선순위 체크리스트 3가지를 명확하게 추출해줘. 각 아이템에 어울리는 귀여운 이모티콘도 붙여서 꼭 순수 JSON 리스트 포맷으로 돌려줘.
+            JSON 스키마 규격: [{"title": "내용", "period": "D-12개월"}] 형태로 기입해줘.`;
+
+            const systemPrompt = "너는 15년 차 최고의 프로 웨딩 플래너이며, JSON 양식 외에 어떠한 인사말이나 서론, 꼬리표 마크다운도 절대 반환하지 않는 정밀 가공 로봇이야. 반드시 완벽히 파싱 가능한 JSON 어레이만 생성해야 해.";
+
+            try {
+                const result = await callGeminiApi(prompt, systemPrompt);
+                let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+                // JSON만 추출하기 위한 방어 코드
+                text = text.substring(text.indexOf("["), text.lastIndexOf("]") + 1);
+                const items = JSON.parse(text);
+
+                listContainer.innerHTML = '';
+                if (items && items.length > 0) {
+                    items.forEach((item, idx) => {
+                        const todoItemDiv = document.createElement('div');
+                        todoItemDiv.className = "flex items-center justify-between bg-white p-2.5 rounded-xl border border-pink-100/30 shadow-sm";
+                        todoItemDiv.innerHTML = `
+                            <div class="flex flex-col">
+                                <span class="text-xs font-semibold text-gray-700">${item.title}</span>
+                                <span class="text-[9px] text-peach-500 font-medium">${item.period || '추천 단계'}</span>
+                            </div>
+                            <button onclick="addAiSuggestedTodo('${item.title.replace(/'/g, "\\'")}', '${item.period}')" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg transition-all flex items-center gap-0.5">
+                                ✨ 추가
+                            </button>
+                        `;
+                        listContainer.appendChild(todoItemDiv);
+                    });
+                } else {
+                    listContainer.innerHTML = `<p class="text-gray-400 text-center py-2">현재 기간에는 모든 체크리스트가 아주 여유롭습니다!</p>`;
+                }
+            } catch (err) {
+                listContainer.innerHTML = `<p class="text-red-500 text-center py-2">일정 추천을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "✨ AI 디데이 맞춤 일정 추천받기";
+            }
+        };
+
+        // 추천받은 AI 일정을 실제 유저 체크리스트에 병입하는 핸들러
+        window.addAiSuggestedTodo = (title, period) => {
+            const newTodo = {
+                id: 'todo_' + Date.now(),
+                title: title,
+                checked: false,
+                period: period || "기타 일정"
+            };
+            localState.checklist.push(newTodo);
+            renderChecklist();
+            saveData();
+            showToast(`"${title}" 일정이 정상 추가되었습니다! 🌸`, "success");
+        };
+
+        // 🪄 [신규 스마트 AI 기능 2] 예산 품목 분석 및 다이어트 처방전 생성기
+        window.analyzeBudgetWithAi = async () => {
+            const btn = document.getElementById('ai-budget-btn');
+            const analysisBox = document.getElementById('ai-budget-analysis');
+
+            if (!localState.budget || localState.budget.length === 0) {
+                showToast("분석할 예산 항목이 존재하지 않습니다. 품목을 먼저 추가해 주세요!", "warning");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "✨ AI 플래너가 지출 내역을 현명하게 분석 중...⏳";
+            analysisBox.classList.remove('hidden');
+            analysisBox.innerHTML = `<div class="flex items-center gap-2 text-gray-400 justify-center py-4"><svg class="w-5 h-5 animate-spin text-weddingGold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-5.5"></path></svg> <span>작성된 장부를 분석해 스마트 다이어트 팁을 도출하고 있습니다...</span></div>`;
+
+            // 예산 데이터 덤프 정리
+            const budgetDataSummary = localState.budget.map(b => `- ${b.name}: 예상(${b.expected}만원), 실지출(${b.spent}만원), 계약금(${b.deposit}만원)`).join('\n');
+
+            const prompt = `예비 신부 예진이의 결혼 예산 내역서입니다:\n${budgetDataSummary}\n\n이 예산을 토대로 15년차 웨딩플래너 체리로서 예진이에게 '가장 추가금이 많이 발생할 것 같은 유의 항목'과 '예산을 세이브할 수 있는 실무적인 다이어트 조언 3가지'를 친절하고 든든한 반말/존댓말 적절히 섞인 다정한 어투로 제공해 줘.`;
+            const systemPrompt = "너는 웨딩 업계의 뒷이야기와 추가금 방어 비법을 꿰뚫고 있는 엄청 상냥하고 똑똑한 실전파 플래너 '체리'야. 문맥 정돈이 예쁘고 따스한 느낌을 유지하도록 작성해 줘.";
+
+            try {
+                const result = await callGeminiApi(prompt, systemPrompt);
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    analysisBox.innerHTML = `
+                        <div class="border-b border-weddingGold-500/10 pb-2 mb-3">
+                            <span class="font-bold text-weddingGold-600 text-xs">🍒 체리 플래너의 예산 진단 진술서</span>
+                        </div>
+                        <div class="leading-relaxed text-gray-600">${parseMarkdownToHtml(text)}</div>
+                    `;
+                } else {
+                    analysisBox.innerText = "진단을 작성하지 못했습니다. 잠시 후 다시 조회를 요청해 주세요.";
+                }
+            } catch (err) {
+                analysisBox.innerText = "오류로 진단을 전송하지 못했습니다: " + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "✨ AI 예산 다이어트 진단받기";
+            }
+        };
+
+        // 🪄 [신규 스마트 AI 기능 3] 청첩장 문구 생성기
+        window.generateAiInvitation = async () => {
+            const groom = document.getElementById('ai-groom-name').value.trim() || "신랑";
+            const bride = document.getElementById('ai-bride-name').value.trim() || "예진";
+            const vibe = document.getElementById('ai-invitation-vibe').value;
+            const season = document.getElementById('ai-invitation-season').value;
+
+            const btn = document.getElementById('ai-invitation-btn');
+            const resBox = document.getElementById('ai-response-box');
+
+            btn.disabled = true;
+            btn.innerText = "✨ 아름다운 초대글을 작사하는 중... ✍️";
+            resBox.classList.remove('hidden');
+            resBox.innerHTML = `<div class="flex items-center gap-2 text-gray-400 justify-center py-4"><svg class="w-5 h-5 animate-spin text-weddingGold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-5.5"></path></svg> <span>${season}을 품은 청첩장 문구를 구상하는 중입니다...</span></div>`;
+
+            const prompt = `신랑 ${groom}군과 신부 ${bride}양의 모바일 청첩장 초대장 서두 인사말을 작성해 줘.
+            전체적인 톤앤무드: ${vibe} 분위기
+            예식 시점 묘사: ${season}
+            청첩장에 바로 복사해서 붙여넣을 수 있도록 불필요한 서론 없이 가독성이 높고 줄바꿈이 정갈한 메인 본문(3~5문단 정도)과 시적인 한 줄 슬로건 타이틀을 완벽하게 디자인해서 돌려줘.`;
+
+            const systemPrompt = "너는 사랑을 아름다운 글자로 자아내는 최고의 감성 카피라이터이자 웨딩 컨설턴트야. 읽는 하객들이 잔잔한 미소를 지을 수 있도록 정갈하고 예쁘게 가공해서 문구만을 반환해 줘.";
+
+            try {
+                const result = await callGeminiApi(prompt, systemPrompt);
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    resBox.innerHTML = `
+                        <div class="border-b border-[#E07A5F]/10 pb-3 mb-4 text-center">
+                            <span class="text-xs font-bold text-[#E07A5F]">💌 복사 가능한 모바일 청첩장 추천 문구</span>
+                        </div>
+                        <div class="text-center font-serif py-2 text-gray-700 leading-loose">${text.replace(/\n/g, '<br>')}</div>
+                    `;
+                } else {
+                    resBox.innerText = "초대글을 생성하지 못했습니다. 다시 시도해 주세요.";
+                }
+            } catch (err) {
+                resBox.innerText = "초대글 생성 중 오류가 발생했습니다: " + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "✨ 모바일 초대 문구 자동 생성하기";
+            }
+        };
+
+        // 기존 1:1 카운슬러 질문 핸들러
         window.setAiQuery = (query) => {
             document.getElementById('ai-input').value = query;
         };
