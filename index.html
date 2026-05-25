@@ -78,26 +78,25 @@
             </p>
 
             <div class="space-y-2 text-[11px] text-gray-600">
-                <p class="font-bold text-gray-700">💡 1분 연동 방법 가이드:</p>
-                <ol class="list-decimal pl-4 space-y-1.5">
-                    <li>구글에 <strong class="text-weddingGold-600">Firebase 콘솔</strong>을 검색하고 로그인합니다.</li>
-                    <li><strong>'프로젝트 추가'</strong>를 눌러 무료 프로젝트를 하나 생성합니다.</li>
-                    <li>중앙의 <strong>&lt;/&gt; (웹) 아이콘</strong>을 클릭하여 내 앱 이름을 적고 등록합니다.</li>
-                    <li>화면에 등장하는 <code class="bg-gray-100 px-1 py-0.5 rounded text-rose-500">const firebaseConfig = { ... }</code> 코드 내용을 통째로 복사해서 아래 입력란에 붙여넣기 해주세요!</li>
+                <p class="font-bold text-gray-700 text-xs text-rose-500">🚨 중요: 구글 콘솔 사이트 필수 설정 3가지!</p>
+                <ol class="list-decimal pl-4 space-y-1.5 bg-rose-50/50 p-3 rounded-xl border border-rose-100">
+                    <li><strong>Authentication</strong> 메뉴 -> <strong>Sign-in method</strong> 탭 -> <strong>Google(구글)</strong> 연동을 '활성화'해 주셔야 로그인이 정상 작동합니다!</li>
+                    <li><strong>Authentication</strong> 메뉴 -> <strong>Settings</strong> 탭 -> <strong>승인된 도메인</strong>에 예진님의 깃허브 도메인(<code class="bg-white px-1 font-mono text-weddingGold-600">yjw-0821.github.io</code>)을 반드시 추가해 주세요!</li>
+                    <li><strong>Firestore Database</strong> 메뉴를 눌러 데이터베이스를 <strong>'테스트 모드로 시작'</strong>하여 데이터 저장소를 꼭 개설해 주세요!</li>
                 </ol>
             </div>
 
             <div class="space-y-1">
-                <label class="block text-[11px] font-bold text-gray-600">📋 Firebase Config JSON 또는 객체 입력:</label>
-                <textarea id="input-firebase-config" placeholder='{\n  "apiKey": "AIzaSy...",\n  "authDomain": "your-app.firebaseapp.com",\n  "projectId": "your-app",\n  "storageBucket": "your-app.appspot.com",\n  "messagingSenderId": "...",\n  "appId": "..."\n}' class="w-full h-32 bg-gray-50 border border-gray-200 rounded-2xl p-3 text-[10px] font-mono focus:outline-none focus:ring-1 focus:ring-weddingGold-500"></textarea>
+                <label class="block text-[11px] font-bold text-gray-600">📋 Firebase Config 붙여넣기 (객체 코드 통째로 입력 가능):</label>
+                <textarea id="input-firebase-config" placeholder='const firebaseConfig = {\n  apiKey: "AIzaSy...",\n  authDomain: "your-app.firebaseapp.com",\n  projectId: "your-app",\n  storageBucket: "your-app.appspot.com",\n  messagingSenderId: "...",\n  appId: "..."\n};' class="w-full h-32 bg-gray-50 border border-gray-200 rounded-2xl p-3 text-[10px] font-mono focus:outline-none focus:ring-1 focus:ring-weddingGold-500"></textarea>
             </div>
 
             <div class="flex gap-2 pt-2">
                 <button onclick="clearUserFirebaseConfig()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">
-                    초기화
+                    연동 초기화
                 </button>
                 <button onclick="saveUserFirebaseConfig()" class="flex-1 bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold py-2.5 rounded-xl transition-all">
-                    연동 테스트 및 저장하기
+                    연동하고 새로고침하기 🔄
                 </button>
             </div>
         </div>
@@ -477,7 +476,7 @@
             document.getElementById('firebase-modal').classList.add('hidden');
         };
 
-        // Firebase 유저 커스텀 설정정보 연동 및 저장
+        // Firebase 유저 커스텀 설정정보 연동 및 저장 (엄청나게 유연한 자바스크립트 객체 파싱 구현!)
         window.saveUserFirebaseConfig = () => {
             const configText = document.getElementById('input-firebase-config').value.trim();
             if (!configText) {
@@ -486,35 +485,29 @@
             }
 
             try {
-                // 객체 형태 또는 JSON 파싱 테스트
-                let parsedConfig;
-                if (configText.startsWith('{')) {
-                    parsedConfig = JSON.parse(configText);
-                } else {
-                    // JavaScript 객체 형식일 때 JSON으로 변환 시도
-                    const jsObjStr = configText
-                        .replace(/const\s+firebaseConfig\s+=\s+/g, '')
-                        .replace(/let\s+firebaseConfig\s+=\s+/g, '')
-                        .replace(/var\s+firebaseConfig\s+=\s+/g, '')
-                        .replace(/;/g, '')
-                        .replace(/([a-zA-Z0-9_]+)\s*:/g, '"$1":')
-                        .replace(/'/g, '"');
-                    parsedConfig = JSON.parse(jsObjStr);
-                }
+                let cleanText = configText;
+                
+                // const firebaseConfig = 이나 let config = 같은 변수 선언부 제거
+                cleanText = cleanText.replace(/(const|let|var)\s+[a-zA-Z0-9_]+\s*=\s*/g, '');
+                // 끝에 붙은 세미콜론(;) 제거
+                cleanText = cleanText.trim().replace(/;$/, '');
+                
+                // JS 객체 텍스트 평가(New Function 샌드박스로 안전하게 가공 파싱)
+                const parsedConfig = (new Function(`return (${cleanText})`))();
 
-                if (!parsedConfig.apiKey || !parsedConfig.projectId) {
-                    throw new Error("apiKey 및 projectId 필수 누락");
+                if (!parsedConfig || !parsedConfig.apiKey || !parsedConfig.projectId) {
+                    throw new Error("apiKey 및 projectId 필수 파라미터가 누락되었습니다.");
                 }
 
                 // 로컬 스토리지 보존 및 새로고침 진행
                 localStorage.setItem('user_firebase_config', JSON.stringify(parsedConfig, null, 2));
-                showToast("Firebase 정보 설정 완료! 실시간 클라우드를 활성화하기 위해 사이트를 새로고침합니다.", "success");
+                showToast("Firebase 정보 설정 완료! 실시간 클라우드를 활성화하기 위해 사이트를 새로고침합니다. 🔄", "success");
                 setTimeout(() => {
                     location.reload();
-                }, 2000);
+                }, 1500);
             } catch (err) {
                 console.error(err);
-                showToast("올바른 Firebase Config 정보가 아닙니다. 설명 가이드를 참고하여 JSON 형식 객체만 기입해 주세요.", "error");
+                showToast("올바른 Firebase Config 양식이 아닙니다. 가이드 코드를 통째로 복사해서 다시 붙여넣어 주세요!", "error");
             }
         };
 
@@ -710,7 +703,6 @@
         // 카테고리 이름 변경 취소
         window.disablePeriodEdit = (period) => {
             const safeId = getSafeId(period);
-            document.getElementById(`period-header-view-${safeId}`).text = period;
             document.getElementById(`period-header-view-${safeId}`).classList.remove('hidden');
             document.getElementById(`period-header-edit-${safeId}`).classList.add('hidden');
         };
@@ -1377,7 +1369,7 @@
 
         function parseMarkdownToHtml(markdown) {
             let html = markdown
-                .replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .replace(/### (.*?)\n/g, '<h4 class="text-xs font-extrabold text-weddingSage mt-4 mb-1 border-b pb-1">$1</h4>')
                 .replace(/## (.*?)\n/g, '<h3 class="text-sm font-bold text-weddingGold-600 mt-5 mb-1.5">$1</h3>')
