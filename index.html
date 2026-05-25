@@ -168,28 +168,13 @@
                     </p>
                 </div>
 
-                <div class="flex gap-2 justify-between pt-3 border-t border-peach-200/50">
-                    <button onclick="openFirebaseModal()" class="text-[10px] text-weddingGold-600 underline font-semibold">🔗 클라우드 DB 연동</button>
+                <div class="flex justify-end pt-3 border-t border-peach-200/50">
                     <div class="flex gap-1.5">
                         <button onclick="toggleSettingsEditor()" class="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition-all">닫기</button>
                         <button onclick="saveSettings()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">저장하기</button>
                     </div>
                 </div>
             </div>
-
-            <!-- 동기화 및 구글 계정 연동 상태 -->
-            <div class="flex items-center justify-between border-t border-dashed border-gray-100 pt-4 mt-2">
-                <div class="flex items-center gap-2">
-                    <span id="sync-icon" class="text-emerald-600 flex items-center gap-1.5 text-xs font-semibold">
-                        <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
-                        <span id="sync-text">자동 로컬 보관 중</span>
-                    </span>
-                </div>
-                <button id="auth-btn" class="text-xs font-bold text-weddingSage bg-weddingGold-100 hover:bg-weddingGold-500/20 px-3 py-1.5 rounded-lg transition-all border border-weddingGold-500/10">
-                    구글 연동(선택)
-                </button>
-            </div>
-            <div id="user-info" class="text-[10px] text-gray-400 mt-2 text-right hidden"></div>
         </header>
 
         <!-- 탭 메뉴 스위치 -->
@@ -425,6 +410,8 @@
         function updateSyncStatus(status) {
             const syncIcon = document.getElementById('sync-icon');
             const syncText = document.getElementById('sync-text');
+            if (!syncIcon || !syncText) return;
+            
             if (status === 'saving') {
                 syncIcon.className = "text-amber-500 flex items-center gap-1.5 text-xs font-semibold";
                 syncIcon.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-5.5"></path></svg> <span>클라우드 저장 중</span>`;
@@ -531,6 +518,8 @@
             const authBtn = document.getElementById('auth-btn');
             const userInfo = document.getElementById('user-info');
             
+            if (!authBtn || !userInfo) return;
+
             if (!user) {
                 authBtn.innerText = "구글 계정 연동";
                 userInfo.classList.add('hidden');
@@ -1436,7 +1425,8 @@
                 });
             }
 
-            document.getElementById('auth-btn').onclick = window.handleAuthAction;
+            const authBtnEl = document.getElementById('auth-btn');
+            if (authBtnEl) authBtnEl.onclick = window.handleAuthAction;
         };
 
     </script>
