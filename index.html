@@ -1,64 +1,2773 @@
 <!DOCTYPE html>
+
 <html lang="ko">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>웨딩 플래너 💍</title>
+
+    <!-- Tailwind CSS CDN -->
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // 설정값 로드
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-planner-default';
+    <script>
 
-        const statusEl = document.getElementById('auth-status');
-        const btnEl = document.getElementById('auth-btn');
+        tailwind.config = {
 
-        // 동기화 시작 로직
-        window.handleAuth = async () => {
-            btnEl.innerText = "연동 중...";
-            btnEl.disabled = true;
-            
-            try {
-                await signInAnonymously(auth);
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        statusEl.innerText = "성공! 이제 모든 기기에서 기록이 실시간 동기화됩니다. 💍";
-                        statusEl.classList.replace('text-gray-600', 'text-green-600');
-                        btnEl.classList.add('hidden');
-                        
-                        // 데이터 연동 확인
-                        const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'profile');
-                        onSnapshot(docRef, (doc) => {
-                            if (doc.exists()) {
-                                console.log("데이터 동기화 완료");
-                            }
-                        });
+            theme: {
+
+                extend: {
+
+                    colors: {
+
+                        peach: {
+
+                            50: '#FFFDFD',
+
+                            100: '#FAF5F5',
+
+                            200: '#FFEBEA',
+
+                            500: '#E07A5F', // Warm peach tone
+
+                        },
+
+                        weddingGold: {
+
+                            50: '#FAF7F2',
+
+                            100: '#F4F1DE', // Soft warm cream
+
+                            500: '#D4A373', // Elegant wedding gold
+
+                            600: '#C39364',
+
+                        },
+
+                        weddingSage: '#606C38', // Natural warm green
+
+                        weddingTeal: '#3D5A80'
+
                     }
-                });
-            } catch (error) {
-                statusEl.innerText = "연결 중 오류가 발생했습니다.";
+
+                }
+
             }
-        };
+
+        }
+
     </script>
+
+    <style>
+
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+        body {
+
+            font-family: 'Noto Sans KR', sans-serif;
+
+            background-color: #FAF5F5;
+
+            background-image: radial-gradient(#F4F1DE 1px, transparent 0), radial-gradient(#F4F1DE 1px, transparent 0);
+
+            background-size: 24px 24px;
+
+            background-position: 0 0, 12px 12px;
+
+        }
+
+        .serif-title {
+
+            font-family: 'Playfair Display', 'Noto Sans KR', serif;
+
+        }
+
+    </style>
+
 </head>
-<body class="bg-[#FAF5F5] min-h-screen flex flex-col items-center p-6">
-    <div class="w-full max-w-lg bg-white rounded-3xl p-8 shadow-lg border border-pink-50 text-center">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Our Wedding Journal</h1>
-        <p class="text-sm text-gray-400 mb-6">소중한 결혼 준비를 기록하세요</p>
-        
-        <div id="auth-section" class="bg-pink-50/50 p-6 rounded-2xl border border-pink-100">
-            <p id="auth-status" class="text-sm text-gray-600 mb-4">로그인 버튼을 누르면 기기 간 기록이 자동 동기화됩니다!</p>
-            <button id="auth-btn" onclick="handleAuth()" class="bg-[#D4A373] text-white font-bold py-3 px-6 rounded-xl hover:bg-[#C39364] transition-all w-full">
-                동기화 시작하기
-            </button>
+
+<body class="min-h-screen text-slate-700 flex flex-col items-center pb-24">
+
+
+
+    <!-- Toast 알림 레이아웃 -->
+
+    <div id="toast-container" class="fixed top-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none"></div>
+
+
+
+    <!-- 커스텀 컨펌(확인) 모달 -->
+
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-pink-100/50 space-y-4">
+
+            <h3 id="confirm-title" class="text-sm font-bold text-gray-800">💍 확인해 주세요</h3>
+
+            <p id="confirm-message" class="text-xs text-gray-500 leading-relaxed whitespace-pre-wrap"></p>
+
+            <div class="flex gap-2 justify-end pt-2">
+
+                <button id="confirm-cancel-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">취소</button>
+
+                <button id="confirm-ok-btn" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all">확인</button>
+
+            </div>
+
         </div>
+
     </div>
+
+
+
+    <!-- Firebase 자가 연동 마법사 모달 (실시간 데이터베이스 맞춤 개편) -->
+
+    <div id="firebase-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-pink-100/50 space-y-4 max-h-[90vh] overflow-y-auto">
+
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+
+                <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+
+                    🔗 구글 실시간 클라우드 연동 마법사
+
+                </h3>
+
+                <button onclick="closeFirebaseModal()" class="text-gray-400 hover:text-gray-600">
+
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+
+                </button>
+
+            </div>
+
+            
+
+            <p class="text-[11px] text-gray-500 leading-relaxed bg-weddingGold-50 p-3 rounded-2xl border border-weddingGold-500/10">
+
+                깃허브 웹사이트에서 <strong>구글 로그인</strong> 및 디바이스 간 <strong>실시간 자동 동기화</strong>를 사용하고 싶다면, 구글에서 카드등록 없이 무료로 개설한 Realtime Database 설정 정보를 아래에 등록해 주세요!
+
+            </p>
+
+
+
+            <div class="space-y-2 text-[11px] text-gray-600">
+
+                <p class="font-bold text-gray-700 text-xs text-rose-500">🚨 중요: 구글 콘솔 사이트 필수 설정 3가지!</p>
+
+                <ol class="list-decimal pl-4 space-y-1.5 bg-rose-50/50 p-3 rounded-xl border border-rose-100">
+
+                    <li><strong>Authentication</strong> 메뉴 ➔ <strong>Sign-in method</strong> ➔ <strong>Google(구글)</strong>을 꼭 '사용 설정(활성화)'해 주세요!</li>
+
+                    <li><strong>Authentication</strong> 메뉴 ➔ <strong>Settings</strong> ➔ <strong>승인된 도메인</strong>에 예진님의 깃허브 도메인(<code class="bg-white px-1 font-mono text-weddingGold-600">yjw-0821.github.io</code>)을 추가해 주세요!</li>
+
+                    <li>카드 등록 없이 3초만에 생성 가능한 <strong>Realtime Database</strong>를 생성하고 보안 규칙을 <strong>'테스트 모드'</strong>로 꼭 켜주세요!</li>
+
+                </ol>
+
+            </div>
+
+
+
+            <div class="space-y-1">
+
+                <label class="block text-[11px] font-bold text-gray-600">📋 Firebase Config 붙여넣기 (코드 통째로 복사해서 넣어도 무방합니다):</label>
+
+                <textarea id="input-firebase-config" placeholder='const firebaseConfig = {\n  apiKey: "AIzaSy...",\n  authDomain: "your-app.firebaseapp.com",\n  databaseURL: "https://your-app.firebaseio.com",\n  projectId: "your-app",\n  appId: "..."\n};' class="w-full h-32 bg-gray-50 border border-gray-200 rounded-2xl p-3 text-[10px] font-mono focus:outline-none focus:ring-1 focus:ring-weddingGold-500"></textarea>
+
+            </div>
+
+
+
+            <div class="flex gap-2 pt-2">
+
+                <button onclick="clearUserFirebaseConfig()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">
+
+                    연동 초기화
+
+                </button>
+
+                <button onclick="saveUserFirebaseConfig()" class="flex-1 bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold py-2.5 rounded-xl transition-all">
+
+                    연동하고 새로고침하기 🔄
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- 메인 컨테이너 -->
+
+    <div class="w-full max-w-lg px-4 mt-6">
+
+        
+
+        <!-- 상단 헤더 & 프로필 카드 -->
+
+        <header class="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-pink-100/30 text-center relative overflow-hidden mb-6">
+
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-weddingGold-100/40 rounded-full blur-2xl"></div>
+
+            <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-peach-100/50 rounded-full blur-xl"></div>
+
+
+
+            <!-- 디데이 헤더 배지 -->
+
+            <span class="inline-block px-4 py-1.5 bg-weddingGold-100 text-weddingGold-600 rounded-full text-xs font-bold mb-3 border border-weddingGold-500/10">
+
+                🤵❤️👰 <span id="header-wedding-date">2027년 08월 21일</span> 본식
+
+            </span>
+
+            
+
+            <!-- 실시간 변경 가능한 메인 타이틀 & 서브 타이틀 -->
+
+            <h1 id="header-main-title" class="serif-title text-3xl font-bold tracking-wide text-gray-800 mb-1">Our Wedding Journal</h1>
+
+            <p id="header-sub-title" class="text-xs text-gray-400 mb-5">예진이의 소중한 결혼 준비 기록장</p>
+
+            
+
+            <!-- 실시간 디데이 -->
+
+            <div class="bg-[#F4F1DE]/70 rounded-2xl p-4 mb-4 border border-dashed border-weddingGold-500/30 relative">
+
+                <span class="text-[10px] text-peach-500 font-extrabold uppercase tracking-wider block mb-0.5">Wedding Day Countdown</span>
+
+                <span id="dday-count" class="text-3xl font-extrabold text-[#E07A5F] tracking-wide">D-457</span>
+
+                
+
+                <!-- 설정 변경 트리거 -->
+
+                <button onclick="toggleSettingsEditor()" class="absolute top-3 right-3 text-gray-400 hover:text-weddingGold-500 transition-all" title="기록장 타이틀 및 예식일 수정">
+
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+
+                </button>
+
+            </div>
+
+
+
+            <!-- 숨겨진 환경 설정 수정 카드 -->
+
+            <div id="settings-editor-box" class="hidden bg-peach-100/50 p-4 rounded-2xl mb-4 border border-peach-200 transition-all text-left space-y-3">
+
+                <h4 class="text-xs font-bold text-gray-700 border-b border-peach-200/50 pb-2 flex items-center gap-1">
+
+                    ⚙️ 기록장 환경설정
+
+                </h4>
+
+                
+
+                <div>
+
+                    <label class="block text-[11px] font-bold text-gray-500 mb-1">💍 변경할 본식 날짜:</label>
+
+                    <input type="date" id="input-wedding-date" class="w-full bg-white border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-weddingGold-500">
+
+                </div>
+
+                
+
+                <div>
+
+                    <label class="block text-[11px] font-bold text-gray-500 mb-1">✍️ 메인 타이틀 (영문 권장):</label>
+
+                    <input type="text" id="input-main-title" placeholder="Our Wedding Journal" class="w-full bg-white border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-weddingGold-500">
+
+                </div>
+
+                
+
+                <div>
+
+                    <label class="block text-[11px] font-bold text-gray-500 mb-1">✍️ 서브 타이틀:</label>
+
+                    <input type="text" id="input-sub-title" placeholder="예진이의 소중한 결혼 준비 기록장" class="w-full bg-white border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-weddingGold-500">
+
+                </div>
+
+
+
+                <div class="flex gap-2 justify-between pt-2 border-t border-peach-200/30">
+
+                    <button onclick="openFirebaseModal()" class="text-[10px] text-weddingGold-600 underline font-semibold">🔗 클라우드 데이터베이스 설정</button>
+
+                    <div class="flex gap-1.5">
+
+                        <button onclick="toggleSettingsEditor()" class="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition-all">취소</button>
+
+                        <button onclick="saveSettings()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">저장하기</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 동기화 및 구글 계정 연동 상태 -->
+
+            <div class="flex items-center justify-between border-t border-dashed border-gray-100 pt-4 mt-2">
+
+                <div class="flex items-center gap-2">
+
+                    <span id="sync-icon" class="text-emerald-600 flex items-center gap-1.5 text-xs font-semibold">
+
+                        <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+
+                        <span id="sync-text">자동 클라우드 보관 중</span>
+
+                    </span>
+
+                </div>
+
+                <button id="auth-btn" class="text-xs font-bold text-weddingSage bg-weddingGold-100 hover:bg-weddingGold-500/20 px-3 py-1.5 rounded-lg transition-all border border-weddingGold-500/10">
+
+                    구글 계정 연동하기
+
+                </button>
+
+            </div>
+
+            <div id="user-info" class="text-[10px] text-gray-400 mt-2 text-right hidden"></div>
+
+        </header>
+
+
+
+        <!-- 탭 메뉴 스위치 -->
+
+        <nav class="flex bg-white p-1.5 rounded-2xl shadow-[0_4px_15px_rgb(0,0,0,0.01)] border border-pink-100/30 mb-6">
+
+            <button onclick="switchTab('checklist')" id="tab-checklist" class="flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all bg-weddingGold-500 text-white">
+
+                📅 체크리스트
+
+            </button>
+
+            <button onclick="switchTab('budget')" id="tab-budget" class="flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all text-gray-400 hover:text-gray-700">
+
+                💰 예산장
+
+            </button>
+
+            <button onclick="switchTab('ai')" id="tab-ai" class="flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all text-gray-400 hover:text-gray-700 flex justify-center items-center gap-1">
+
+                💬 AI 멘토
+
+            </button>
+
+        </nav>
+
+
+
+        <!-- 섹션 1: 체크리스트 탭 -->
+
+        <section id="sec-checklist" class="space-y-4">
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-pink-100/20">
+
+                <div class="flex justify-between items-center mb-2">
+
+                    <span class="text-xs font-bold text-weddingSage">체크리스트 준비 상황</span>
+
+                    <span id="progress-percent" class="text-xs font-bold text-weddingGold-500">0%</span>
+
+                </div>
+
+                <div class="w-full bg-weddingGold-100/50 rounded-full h-2 overflow-hidden">
+
+                    <div id="progress-bar" class="bg-gradient-to-r from-weddingGold-500 to-peach-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 신규 할일 추가 인풋 -->
+
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-100/20 flex flex-col gap-3">
+
+                <div class="flex flex-col gap-2">
+
+                    <input type="text" id="new-todo-title" placeholder="새로운 준비 스케줄을 추가해보세요..." class="w-full bg-gray-50/50 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent focus:border-transparent">
+
+                    <div class="flex gap-2">
+
+                        <select id="new-todo-period-select" onchange="toggleCustomPeriodInput()" class="flex-1 bg-gray-50/50 text-xs rounded-xl px-3 py-2.5 text-gray-500 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent">
+
+                        </select>
+
+                        <input type="text" id="new-todo-period-custom" placeholder="직접 입력 (예: D-100일)" class="hidden flex-1 bg-gray-50/50 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent">
+
+                        <button onclick="addCustomTodo()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all">추가</button>
+
+                    </div>
+
+                </div>
+
+                <button onclick="generateAiChecklist()" id="ai-todo-gen-btn" class="w-full bg-peach-100/60 hover:bg-peach-200/60 border border-peach-500/20 text-peach-500 font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-1">
+
+                    ✨ AI 디데이 맞춤 일정 추천받기
+
+                </button>
+
+                <div id="ai-todo-box" class="hidden bg-weddingGold-50/50 p-3.5 rounded-2xl border border-weddingGold-500/10 text-xs">
+
+                    <p class="font-bold text-weddingGold-600 mb-2 flex items-center gap-1">💍 현재 D-Day 단계 추천 목록:</p>
+
+                    <div id="ai-suggested-todos-list" class="space-y-2"></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 타임라인별 체크리스트 목록 -->
+
+            <div class="space-y-4" id="todo-list-container">
+
+            </div>
+
+        </section>
+
+
+
+        <!-- 섹션 2: 예산장 탭 -->
+
+        <section id="sec-budget" class="hidden space-y-4">
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-pink-100/20">
+
+                <h3 class="text-sm font-bold text-weddingSage mb-4 flex items-center gap-1.5">
+
+                    📖 예산 전체 정산표
+
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+
+                    <div class="bg-weddingGold-50 p-4 rounded-2xl border border-weddingGold-500/10">
+
+                        <span class="text-[10px] text-gray-400 block mb-1">전체 계획된 예상 금액</span>
+
+                        <span id="summary-expected" class="text-base font-bold text-gray-700">0 만원</span>
+
+                    </div>
+
+                    <div class="bg-peach-100/40 p-4 rounded-2xl border border-peach-200/20">
+
+                        <span class="text-[10px] text-gray-400 block mb-1">실제 확정 지출액</span>
+
+                        <span id="summary-spent" class="text-base font-bold text-peach-500">0 만원</span>
+
+                    </div>
+
+                </div>
+
+                <div class="bg-[#F4F1DE]/50 p-4 rounded-2xl flex justify-between items-center border border-dashed border-weddingGold-500/30">
+
+                    <div>
+
+                        <span class="text-[10px] text-gray-500 block">남은 식후 최종 잔금</span>
+
+                        <span id="summary-balance" class="text-lg font-extrabold text-[#E07A5F]">0 만원</span>
+
+                    </div>
+
+                    <div class="text-right">
+
+                        <span class="text-[10px] text-gray-400 block">이미 납부한 총 계약금</span>
+
+                        <span id="summary-deposit" class="text-xs font-bold text-weddingSage">0 만원</span>
+
+                    </div>
+
+                </div>
+
+                <button onclick="analyzeBudgetWithAi()" id="ai-budget-btn" class="w-full mt-3 bg-gradient-to-r from-weddingGold-500 to-peach-500 hover:opacity-90 text-white font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1 shadow-sm">
+
+                    ✨ AI 예산 다이어트 진단받기
+
+                </button>
+
+            </div>
+
+
+
+            <!-- AI 예산 진단 출력 박스 -->
+
+            <div id="ai-budget-analysis" class="hidden bg-white p-5 rounded-3xl border border-weddingGold-500/20 shadow-sm text-xs leading-relaxed text-gray-600 whitespace-pre-wrap">
+
+            </div>
+
+
+
+            <!-- 예산 항목 추가 폼 -->
+
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-100/20 flex flex-col gap-3">
+
+                <h4 class="text-xs font-bold text-weddingGold-600">📌 예산 품목 간편 등록</h4>
+
+                <div class="flex gap-2">
+
+                    <input type="text" id="new-budget-name" placeholder="품목명 (예: 드레스 투어)" class="flex-1 bg-gray-50/50 text-sm rounded-xl px-3 py-2 border border-transparent focus:outline-none focus:ring-1 focus:ring-weddingGold-500 focus:bg-white">
+
+                    <input type="number" id="new-budget-expected" placeholder="예상(만원)" class="w-24 bg-gray-50/50 text-sm rounded-xl px-3 py-2 border border-transparent focus:outline-none focus:ring-1 focus:ring-weddingGold-500 focus:bg-white">
+
+                    <button onclick="addCustomBudget()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">추가</button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 품목별 아름다운 카드 목록 -->
+
+            <div class="space-y-3" id="budget-items-container">
+
+            </div>
+
+        </section>
+
+
+
+        <!-- 섹션 3: 웨딩 AI 비서 탭 -->
+
+        <section id="sec-ai" class="hidden space-y-4">
+
+            <!-- AI 청첩장 초대장 생성 도구 -->
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-pink-100/20 space-y-3">
+
+                <div class="flex items-center gap-2 mb-1">
+
+                    <span class="text-base">✉️</span>
+
+                    <h4 class="text-xs font-bold text-gray-800">✨ AI 모바일 청첩장 초대글 메이커</h4>
+
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+
+                    <input type="text" id="ai-groom-name" placeholder="신랑 이름 (예: 신랑)" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent">
+
+                    <input type="text" id="ai-bride-name" placeholder="신부 이름 (예: 예진)" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent">
+
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+
+                    <select id="ai-invitation-vibe" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent text-gray-500">
+
+                        <option value="정중하고 고급스러운">💎 정중하고 고급스럽게</option>
+
+                        <option value="감성적이고 다스한">🌸 감성적이고 따뜻하게</option>
+
+                        <option value="귀엽고 발랄한">🌱 귀엽고 발랄하게</option>
+
+                        <option value="깔끔하고 정량적인">✉️ 군더더기 없이 심플하게</option>
+
+                    </select>
+
+                    <select id="ai-invitation-season" class="bg-gray-50/50 text-xs rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 border border-transparent text-gray-500">
+
+                        <option value="눈부신 봄날">🍀 눈부신 봄날 (3~5월)</option>
+
+                        <option value="싱그러운 여름날">☀️ 싱그러운 여름날 (6~8월)</option>
+
+                        <option value="가을의 선선한 바람결">🍂 선선한 가을날 (9~11월)</option>
+
+                        <option value="눈 내리는 포근한 겨울">❄️ 포근한 겨울날 (12~2월)</option>
+
+                    </select>
+
+                </div>
+
+                <button onclick="generateAiInvitation()" id="ai-invitation-btn" class="w-full bg-[#E07A5F] hover:bg-[#E07A5F]/90 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-1">
+
+                    ✨ 모바일 초대 문구 자동 생성하기
+
+                </button>
+
+            </div>
+
+
+
+            <!-- 기본 AI 비서 질문창 -->
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-pink-100/20">
+
+                <div class="flex items-center gap-3 mb-4">
+
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-weddingGold-500 to-peach-500 flex items-center justify-center text-white text-lg shadow-sm">
+
+                        🌸
+
+                    </div>
+
+                    <div>
+
+                        <h3 class="text-sm font-bold text-gray-800">예진님의 AI 웨딩 카운슬러</h3>
+
+                        <p class="text-[10px] text-gray-400">결혼식의 다양한 팁과 절약 전략을 물어보세요.</p>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="flex flex-wrap gap-1.5 mb-4">
+
+                    <button onclick="setAiQuery('예식장이 15개월 남은 지금, 웨딩홀 투어 시 꼭 체크해야 할 체크리스트 5가지를 추천해 줘.')" class="text-xs bg-peach-100/50 text-peach-500 hover:bg-peach-200/50 px-3 py-1.5 rounded-full transition-all">
+
+                        🏛️ 웨딩홀 체크포인트
+
+                    </button>
+
+                    <button onclick="setAiQuery('가성비 있으면서도 만족스러운 실속 있는 스드메 계약 요령과 꿀팁을 친절하게 가르쳐 줘.')" class="text-xs bg-peach-100/50 text-peach-500 hover:bg-peach-200/50 px-3 py-1.5 rounded-full transition-all">
+
+                        👗 스드메 가성비 전략
+
+                    </button>
+
+                </div>
+
+
+
+                <div class="flex gap-2">
+
+                    <input type="text" id="ai-input" placeholder="여기에 궁금한 사항을 적어보세요..." class="flex-1 bg-gray-50/50 text-sm rounded-xl px-4 py-3 border border-transparent focus:outline-none focus:ring-1 focus:ring-weddingGold-500 focus:bg-white">
+
+                    <button id="send-ai-btn" onclick="askAiPlanner()" class="bg-weddingSage hover:bg-weddingSage/90 text-white font-bold px-4 rounded-xl text-sm transition-all flex items-center justify-center">
+
+                        질문
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 답변 표시부 -->
+
+            <div id="ai-response-box" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-pink-100/20 whitespace-pre-wrap leading-relaxed text-sm text-gray-700">
+
+            </div>
+
+        </section>
+
+
+
+    </div>
+
+
+
+    <!-- Firebase SDK (Firestore 대신 카드 등록 필요 없는 Realtime Database 모듈 바인딩) -->
+
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+
+
+        // 1. Firebase 초기화
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-wedding-planner';
+
+        let useFirebase = false;
+
+        let db, auth;
+
+        let firebaseConfig = null;
+
+
+
+        // 로컬 상태값 이니셜 백업
+
+        let localState = {
+
+            weddingDate: "2027-08-21",
+
+            mainTitle: "Our Wedding Journal",
+
+            subTitle: "예진이의 소중한 결혼 준비 기록장",
+
+            periods: ["D-15개월", "D-12개월", "D-10개월", "D-9개월", "D-6개월", "D-4개월", "D-3개월", "D-1개월", "기타 일정"],
+
+            checklist: [
+
+                { id: "todo1", title: "마음에 드는 베뉴 웨딩홀 선정 및 계약 🏛️", checked: true, period: "D-15개월", memo: "아펠가모 선릉 / 12시 단독홀 타임 완료 (식대 6.5만 원 협의)" },
+
+                { id: "todo2", title: "예약 경쟁 치열한 본식 스냅작가 & DVD 가계약 📸", checked: false, period: "D-15개월", memo: "인스타 @wedding_snap_official 예약 오픈 대기 중" },
+
+                { id: "todo3", title: "인기 있는 제주 스냅 또는 드레스 스튜디오 예약 완료 👗", checked: false, period: "D-12개월" },
+
+                { id: "todo4", title: "가성비 뛰어난 동행/비동행 스드메 상담 및 플래너 계약 💄", checked: false, period: "D-10개월", memo: "다이렉트웨딩 김은지 플래너 실장 (연락처: 010-1234-5678)" },
+
+                { id: "todo5", title: "신혼여행 항공편 특가 모니터링 및 선예매 완료 ✈️", checked: false, period: "D-9개월" },
+
+                { id: "todo6", title: "맞춤 예복 브랜드 상담 및 계약 완료 🤵", checked: false, period: "D-6개월" },
+
+                { id: "todo7", title: "가장 오래 끼게 될 웨딩밴드 브랜드 오더 완료 💍", checked: false, period: "D-4개월" },
+
+                { id: "todo8", title: "친척 및 친구들에게 보낼 종이/모바일 청첩장 완료 ✉️", checked: false, period: "D-3개월" },
+
+                { id: "todo9", title: "식전 동영상 제작 및 턱시도/드레스 최종 점검 가먼트 피팅 🎵", checked: false, period: "D-1개월" }
+
+            ],
+
+            budget: [
+
+                { id: "b1", name: "웨딩홀 대관료 & 예식 식대 비용", expected: 1800, spent: 0, deposit: 200 },
+
+                { id: "b2", name: "스튜디오 드레스 메이크업 패키지", expected: 300, spent: 0, deposit: 50 },
+
+                { id: "b3", name: "동남아 / 유럽 신혼여행 총액 경비", expected: 500, spent: 0, deposit: 100 },
+
+                { id: "b4", name: "종로 / 백화점 브랜드 웨딩밴드 커플링", expected: 250, spent: 0, deposit: 50 }
+
+            ]
+
+        };
+
+
+
+        try {
+
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+
+                firebaseConfig = JSON.parse(__firebase_config);
+
+            } else {
+
+                const userConfigStr = localStorage.getItem('user_firebase_config');
+
+                if (userConfigStr) {
+
+                    firebaseConfig = JSON.parse(userConfigStr);
+
+                }
+
+            }
+
+
+
+            if (firebaseConfig) {
+
+                const app = initializeApp(firebaseConfig);
+
+                auth = getAuth(app);
+
+                db = getDatabase(app); // Realtime Database 이니셜라이징
+
+                useFirebase = true;
+
+                console.log("Firebase Realtime DB initialized successfully.");
+
+            } else {
+
+                throw new Error("No config provided.");
+
+            }
+
+        } catch (e) {
+
+            console.warn("Using offline state cache mode: " + e.message);
+
+        }
+
+
+
+        let currentUser = null;
+
+
+
+        function updateSyncStatus(status) {
+
+            const syncIcon = document.getElementById('sync-icon');
+
+            const syncText = document.getElementById('sync-text');
+
+            if (status === 'saving') {
+
+                syncIcon.className = "text-amber-500 flex items-center gap-1.5 text-xs font-semibold";
+
+                syncIcon.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-5.5"></path></svg> <span>클라우드 저장 중</span>`;
+
+            } else if (status === 'synced') {
+
+                syncIcon.className = "text-emerald-600 flex items-center gap-1.5 text-xs font-semibold";
+
+                syncIcon.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span>동기화 및 안전 저장 완료</span>`;
+
+            } else {
+
+                syncIcon.className = "text-gray-400 flex items-center gap-1.5 text-xs font-semibold";
+
+                syncIcon.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> <span>로컬 디스크 임시 오프라인 모드</span>`;
+
+            }
+
+        }
+
+
+
+        window.showConfirm = (title, message, onOk) => {
+
+            const modal = document.getElementById('confirm-modal');
+
+            document.getElementById('confirm-title').innerText = title;
+
+            document.getElementById('confirm-message').innerText = message;
+
+            
+
+            const okBtn = document.getElementById('confirm-ok-btn');
+
+            const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+            
+
+            const close = () => {
+
+                modal.classList.add('hidden');
+
+            };
+
+            
+
+            okBtn.onclick = () => {
+
+                onOk();
+
+                close();
+
+            };
+
+            
+
+            cancelBtn.onclick = close;
+
+            modal.classList.remove('hidden');
+
+        };
+
+
+
+        window.openFirebaseModal = () => {
+
+            document.getElementById('firebase-modal').classList.remove('hidden');
+
+            const savedConfig = localStorage.getItem('user_firebase_config');
+
+            if (savedConfig) {
+
+                document.getElementById('input-firebase-config').value = savedConfig;
+
+            }
+
+        };
+
+
+
+        window.closeFirebaseModal = () => {
+
+            document.getElementById('firebase-modal').classList.add('hidden');
+
+        };
+
+
+
+        window.saveUserFirebaseConfig = () => {
+
+            const configText = document.getElementById('input-firebase-config').value.trim();
+
+            if (!configText) {
+
+                showToast("Firebase 설정 정보를 입력란에 붙여넣어 주세요!", "warning");
+
+                return;
+
+            }
+
+
+
+            try {
+
+                let cleanText = configText;
+
+                cleanText = cleanText.replace(/(const|let|var)\s+[a-zA-Z0-9_]+\s*=\s*/g, '');
+
+                cleanText = cleanText.trim().replace(/;$/, '');
+
+                
+
+                const parsedConfig = (new Function(`return (${cleanText})`))();
+
+
+
+                if (!parsedConfig || !parsedConfig.apiKey || !parsedConfig.projectId) {
+
+                    throw new Error("apiKey 및 projectId 필수 파라미터가 누락되었습니다.");
+
+                }
+
+
+
+                localStorage.setItem('user_firebase_config', JSON.stringify(parsedConfig, null, 2));
+
+                showToast("Realtime Database 연동 완료! 동기화를 활성화하기 위해 새로고침합니다. 🔄", "success");
+
+                setTimeout(() => {
+
+                    location.reload();
+
+                }, 1500);
+
+            } catch (err) {
+
+                console.error(err);
+
+                showToast("올바른 Firebase Config 형식이 아닙니다. 설명 가이드 코드를 다시 확인해 주세요!", "error");
+
+            }
+
+        };
+
+
+
+        window.clearUserFirebaseConfig = () => {
+
+            showConfirm("Firebase 연동 해제", "등록된 설정을 삭제하고 안전한 오프라인 모드로 돌아가시겠습니까?", () => {
+
+                localStorage.removeItem('user_firebase_config');
+
+                showToast("연동 정보 삭제 완료. 새로고침합니다.", "success");
+
+                setTimeout(() => location.reload(), 1500);
+
+            });
+
+        };
+
+
+
+        const initAuth = async () => {
+
+            if (!useFirebase) return;
+
+            try {
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+
+                    await signInWithCustomToken(auth, __initial_auth_token);
+
+                } else {
+
+                    await signInAnonymously(auth);
+
+                }
+
+            } catch (err) {
+
+                console.error("Auth init failed. Retrying anonymously...", err);
+
+                try {
+
+                    await signInAnonymously(auth);
+
+                } catch (innerErr) {
+
+                    useFirebase = false;
+
+                    updateSyncStatus('offline');
+
+                }
+
+            }
+
+        };
+
+
+
+        function handleUserLoginUI(user) {
+
+            currentUser = user;
+
+            const authBtn = document.getElementById('auth-btn');
+
+            const userInfo = document.getElementById('user-info');
+
+            
+
+            if (!user) {
+
+                authBtn.innerText = "구글 계정 연동";
+
+                userInfo.classList.add('hidden');
+
+                return;
+
+            }
+
+
+
+            if (user.isAnonymous) {
+
+                authBtn.innerText = "구글 계정 연동하기 🔒";
+
+                userInfo.innerHTML = `임시 브라우저 계정으로 접속 중 (UID: ${user.uid.slice(0, 8)}...)`;
+
+                userInfo.classList.remove('hidden');
+
+            } else {
+
+                authBtn.innerText = "로그아웃";
+
+                userInfo.innerHTML = `🛡️ 연동 중인 구글 계정: ${user.email}`;
+
+                userInfo.classList.remove('hidden');
+
+            }
+
+        }
+
+
+
+        window.handleAuthAction = async () => {
+
+            if (!useFirebase) {
+
+                openFirebaseModal();
+
+                return;
+
+            }
+
+            const user = auth.currentUser;
+
+            if (!user) return;
+
+
+
+            if (!user.isAnonymous) {
+
+                showConfirm("로그아웃", "정말 로그아웃(연동해제)하시겠습니까?", async () => {
+
+                    await signOut(auth);
+
+                    showToast("로그아웃 되었습니다.", "info");
+
+                });
+
+                return;
+
+            }
+
+
+
+            const provider = new GoogleAuthProvider();
+
+            try {
+
+                updateSyncStatus('saving');
+
+                await signInWithPopup(auth, provider);
+
+                showToast("구글 클라우드 계정과 안전하게 연동되었습니다! 🌸", "success");
+
+            } catch (err) {
+
+                showToast("로그인 연동 중 에러가 발생했거나 연동이 취소되었습니다.", "error");
+
+                updateSyncStatus('synced');
+
+            }
+
+        };
+
+
+
+        // Realtime Database 쓰기 동기화 셋팅 (RULE 1 준수)
+
+        window.saveData = async () => {
+
+            if (!useFirebase || !currentUser) {
+
+                localStorage.setItem('wedding_planner_local_state_v2', JSON.stringify(localState));
+
+                updateSyncStatus('offline');
+
+                return;
+
+            }
+
+
+
+            updateSyncStatus('saving');
+
+            try {
+
+                // Strict Paths: /artifacts/{appId}/users/{userId}/weddingState/main
+
+                const dbRef = ref(db, `artifacts/${appId}/users/${currentUser.uid}/weddingState/main`);
+
+                await set(dbRef, localState);
+
+                updateSyncStatus('synced');
+
+            } catch (err) {
+
+                console.error("Cloud saving error: ", err);
+
+                updateSyncStatus('offline');
+
+                showToast("서버 저장에 실패했습니다. 임시로 브라우저에 백업됩니다.", "error");
+
+            }
+
+        };
+
+
+
+        window.renderApp = () => {
+
+            document.getElementById('header-main-title').innerText = localState.mainTitle || "Our Wedding Journal";
+
+            document.getElementById('header-sub-title').innerText = localState.subTitle || "예진이의 소중한 결혼 준비 기록장";
+
+
+
+            renderDDay();
+
+            renderChecklist();
+
+            renderBudget();
+
+        };
+
+
+
+        window.toggleSettingsEditor = () => {
+
+            const box = document.getElementById('settings-editor-box');
+
+            box.classList.toggle('hidden');
+
+            if (!box.classList.contains('hidden')) {
+
+                document.getElementById('input-wedding-date').value = localState.weddingDate || "2027-08-21";
+
+                document.getElementById('input-main-title').value = localState.mainTitle || "Our Wedding Journal";
+
+                document.getElementById('input-sub-title').value = localState.subTitle || "예진이의 소중한 결혼 준비 기록장";
+
+            }
+
+        };
+
+
+
+        window.saveSettings = () => {
+
+            const dateVal = document.getElementById('input-wedding-date').value;
+
+            const mainTitleVal = document.getElementById('input-main-title').value.trim();
+
+            const subTitleVal = document.getElementById('input-sub-title').value.trim();
+
+
+
+            if (!dateVal) {
+
+                showToast("본식 날짜를 지정해 주세요!", "warning");
+
+                return;
+
+            }
+
+            if (!mainTitleVal) {
+
+                showToast("메인 타이틀 문구를 입력해 주세요!", "warning");
+
+                return;
+
+            }
+
+
+
+            localState.weddingDate = dateVal;
+
+            localState.mainTitle = mainTitleVal;
+
+            localState.subTitle = subTitleVal || "결혼 준비 기록장";
+
+
+
+            document.getElementById('settings-editor-box').classList.add('hidden');
+
+            
+
+            renderApp();
+
+            saveData();
+
+            showToast("기록장 설정이 저장되었습니다! 💖", "success");
+
+        };
+
+
+
+        function renderDDay() {
+
+            const weddingDateStr = localState.weddingDate || "2027-08-21";
+
+            const targetDate = new Date(weddingDateStr + "T00:00:00");
+
+            const today = new Date();
+
+            today.setHours(0,0,0,0);
+
+            
+
+            const diffTime = targetDate - today;
+
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            
+
+            const d = new Date(weddingDateStr);
+
+            const formattedDate = `${d.getFullYear()}년 ${String(d.getMonth() + 1).padStart(2, '0')}월 ${String(d.getDate()).padStart(2, '0')}일`;
+
+            document.getElementById('header-wedding-date').innerText = formattedDate;
+
+
+
+            const ddayDisplay = document.getElementById('dday-count');
+
+            if (diffDays > 0) {
+
+                ddayDisplay.innerText = `D-${diffDays}`;
+
+            } else if (diffDays === 0) {
+
+                ddayDisplay.innerText = `D-Day 💐 오늘 최고로 행복하게 만나요!`;
+
+            } else {
+
+                ddayDisplay.innerText = `D+${Math.abs(diffDays)} 💕 행복한 우리 부부의 여정`;
+
+            }
+
+        }
+
+
+
+        function getSafeId(str) {
+
+            return btoa(unescape(encodeURIComponent(str))).replace(/=/g, '').slice(0, 15);
+
+        }
+
+
+
+        window.enablePeriodEdit = (period) => {
+
+            const safeId = getSafeId(period);
+
+            document.getElementById(`period-header-view-${safeId}`).classList.add('hidden');
+
+            document.getElementById(`period-header-edit-${safeId}`).classList.remove('hidden');
+
+        };
+
+
+
+        window.disablePeriodEdit = (period) => {
+
+            const safeId = getSafeId(period);
+
+            document.getElementById(`period-header-view-${safeId}`).classList.remove('hidden');
+
+            document.getElementById(`period-header-edit-${safeId}`).classList.add('hidden');
+
+        };
+
+
+
+        window.savePeriodRename = (oldPeriod) => {
+
+            const safeId = getSafeId(oldPeriod);
+
+            const inputVal = document.getElementById(`period-input-${safeId}`).value.trim();
+
+
+
+            if (!inputVal) {
+
+                showToast("카테고리 이름을 입력해 주세요!", "warning");
+
+                return;
+
+            }
+
+
+
+            if (inputVal === oldPeriod) {
+
+                disablePeriodEdit(oldPeriod);
+
+                return;
+
+            }
+
+
+
+            const periodIdx = localState.periods.indexOf(oldPeriod);
+
+            if (periodIdx !== -1) {
+
+                localState.periods[periodIdx] = inputVal;
+
+            } else {
+
+                localState.periods.push(inputVal);
+
+            }
+
+
+
+            localState.checklist.forEach(todo => {
+
+                if (todo.period === oldPeriod) {
+
+                    todo.period = inputVal;
+
+                }
+
+            });
+
+
+
+            renderChecklist();
+
+            updatePeriodDropdown();
+
+            saveData();
+
+            showToast(`"${oldPeriod}" 그룹 이름이 "${inputVal}"(으)로 변경되었습니다! 🎋`, "success");
+
+        };
+
+
+
+        window.deletePeriod = (period) => {
+
+            if (localState.periods.length <= 1) {
+
+                showToast("최소한 한 개 이상의 카테고리는 남겨 두어야 합니다!", "warning");
+
+                return;
+
+            }
+
+
+
+            showConfirm("카테고리 삭제 확인", `"${period}" 카테고리를 정말 삭제하시겠습니까?\n이 카테고리 안에 있는 할 일들은 '기타 일정' 카테고리로 안전하게 이동됩니다.`, () => {
+
+                localState.periods = localState.periods.filter(p => p !== period);
+
+
+
+                if (!localState.periods.includes("기타 일정")) {
+
+                    localState.periods.push("기타 일정");
+
+                }
+
+
+
+                localState.checklist.forEach(todo => {
+
+                    if (todo.period === period) {
+
+                        todo.period = "기타 일정";
+
+                    }
+
+                });
+
+
+
+                renderChecklist();
+
+                updatePeriodDropdown();
+
+                saveData();
+
+                showToast(`"${period}" 그룹이 삭제되었습니다.`, "info");
+
+            });
+
+        };
+
+
+
+        window.updatePeriodDropdown = () => {
+
+            const select = document.getElementById('new-todo-period-select');
+
+            if (!select) return;
+
+
+
+            select.innerHTML = '';
+
+            localState.periods.forEach(p => {
+
+                const opt = document.createElement('option');
+
+                opt.value = p;
+
+                opt.innerText = p;
+
+                select.appendChild(opt);
+
+            });
+
+
+
+            const optCustom = document.createElement('option');
+
+            optCustom.value = "__custom__";
+
+            optCustom.innerText = "✍️ 직접 입력하기...";
+
+            select.appendChild(optCustom);
+
+
+
+            toggleCustomPeriodInput();
+
+        };
+
+
+
+        window.toggleCustomPeriodInput = () => {
+
+            const select = document.getElementById('new-todo-period-select');
+
+            const customInput = document.getElementById('new-todo-period-custom');
+
+            if (!select || !customInput) return;
+
+
+
+            if (select.value === "__custom__") {
+
+                customInput.classList.remove('hidden');
+
+                customInput.focus();
+
+            } else {
+
+                customInput.classList.add('hidden');
+
+            }
+
+        };
+
+
+
+        window.toggleMemoEditor = (id) => {
+
+            const box = document.getElementById(`memo-edit-${id}`);
+
+            if (box) box.classList.toggle('hidden');
+
+        };
+
+
+
+        window.saveTodoMemo = (id) => {
+
+            const index = localState.checklist.findIndex(t => t.id === id);
+
+            if (index !== -1) {
+
+                const memoVal = document.getElementById(`memo-input-${id}`).value.trim();
+
+                localState.checklist[index].memo = memoVal;
+
+                renderChecklist();
+
+                saveData();
+
+                showToast("세부 메모가 저장되었습니다! 📝", "success");
+
+            }
+
+        };
+
+
+
+        function renderChecklist() {
+
+            const container = document.getElementById('todo-list-container');
+
+            container.innerHTML = '';
+
+
+
+            if (!localState.periods || localState.periods.length === 0) {
+
+                localState.periods = ["D-15개월", "D-12개월", "D-10개월", "D-9개월", "D-6개월", "D-4개월", "D-3개월", "D-1개월", "기타 일정"];
+
+            }
+
+            const periods = localState.periods;
+
+
+
+            localState.checklist.forEach(todo => {
+
+                if (todo.period && !periods.includes(todo.period)) {
+
+                    periods.push(todo.period);
+
+                }
+
+            });
+
+
+
+            const grouped = {};
+
+            periods.forEach(p => grouped[p] = []);
+
+
+
+            localState.checklist.forEach(todo => {
+
+                const groupKey = periods.includes(todo.period) ? todo.period : "기타 일정";
+
+                if (!grouped[groupKey]) grouped[groupKey] = [];
+
+                grouped[groupKey].push(todo);
+
+            });
+
+
+
+            let totalTasks = localState.checklist.length;
+
+            let checkedTasks = localState.checklist.filter(t => t.checked).length;
+
+            const progressPercent = totalTasks > 0 ? Math.round((checkedTasks / totalTasks) * 100) : 0;
+
+
+
+            document.getElementById('progress-percent').innerText = `${progressPercent}%`;
+
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+
+
+            periods.forEach(period => {
+
+                const list = grouped[period] || [];
+
+                if (list.length === 0 && period === "기타 일정") return;
+
+
+
+                const section = document.createElement('div');
+
+                section.className = "bg-white p-5 rounded-3xl shadow-[0_4px_15px_rgb(0,0,0,0.015)] border border-pink-100/10";
+
+                
+
+                const safeId = getSafeId(period);
+
+                const completedCount = list.filter(t => t.checked).length;
+
+                const totalCount = list.length;
+
+
+
+                const title = document.createElement('div');
+
+                title.className = "text-xs font-bold text-weddingSage tracking-wider mb-4 flex items-center justify-between border-b border-gray-50 pb-2";
+
+                
+
+                title.innerHTML = `
+
+                    <div id="period-header-view-${safeId}" class="flex items-center gap-2">
+
+                        <span>🎋 ${period} 일지</span>
+
+                        <button onclick="enablePeriodEdit('${period.replace(/'/g, "\\'")}')" class="text-gray-300 hover:text-weddingGold-500 p-0.5 transition-all" title="이름 수정">
+
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+
+                        </button>
+
+                        <button onclick="deletePeriod('${period.replace(/'/g, "\\'")}')" class="text-gray-300 hover:text-red-400 p-0.5 transition-all" title="카테고리 삭제">
+
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+
+                        </button>
+
+                    </div>
+
+                    
+
+                    <div id="period-header-edit-${safeId}" class="hidden flex items-center gap-1.5">
+
+                        <input type="text" id="period-input-${safeId}" value="${period.replace(/"/g, '&quot;')}" class="bg-gray-50 text-[10px] rounded-lg px-2 py-1 border border-weddingGold-300 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 font-bold text-weddingSage w-28">
+
+                        <button onclick="savePeriodRename('${period.replace(/'/g, "\\'")}')" class="text-emerald-600 hover:text-emerald-700 p-0.5 transition-all" title="완료">
+
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+
+                        </button>
+
+                        <button onclick="disablePeriodEdit('${period.replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-600 p-0.5 transition-all" title="취소">
+
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+
+                        </button>
+
+                    </div>
+
+                    <span class="text-[10px] bg-weddingGold-100 text-weddingGold-600 px-2 py-0.5 rounded-full">${completedCount}/${totalCount} 완료</span>
+
+                `;
+
+                section.appendChild(title);
+
+
+
+                const itemWrapper = document.createElement('div');
+
+                itemWrapper.className = "space-y-3";
+
+
+
+                list.forEach(item => {
+
+                    const row = document.createElement('div');
+
+                    row.className = "border-b border-gray-50 last:border-0 pb-2 mb-2 last:pb-0 last:mb-0";
+
+                    
+
+                    let memoHtml = '';
+
+                    if (item.memo && item.memo.trim() !== '') {
+
+                        memoHtml = `
+
+                            <div class="text-xs text-gray-500 ml-8 mt-1 flex items-start gap-1 bg-amber-50/40 p-2 rounded-xl border border-dashed border-amber-200/50">
+
+                                <span class="text-weddingGold-500">↳</span>
+
+                                <span class="whitespace-pre-wrap leading-relaxed">${item.memo}</span>
+
+                            </div>
+
+                        `;
+
+                    }
+
+
+
+                    row.innerHTML = `
+
+                        <div class="flex items-center justify-between gap-3 p-2 rounded-xl transition-all ${item.checked ? 'bg-gray-50/50' : 'bg-transparent'}">
+
+                            <label class="flex items-start gap-3 cursor-pointer flex-1 select-none">
+
+                                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleTodoStatus('${item.id}')" class="w-5 h-5 accent-weddingGold-500 rounded border-gray-300 mt-0.5">
+
+                                <span class="text-sm ${item.checked ? 'line-through text-gray-400 font-normal' : 'text-gray-700 font-medium'}">${item.title}</span>
+
+                            </label>
+
+                            
+
+                            <div class="flex items-center gap-1.5">
+
+                                <button onclick="toggleMemoEditor('${item.id}')" class="text-gray-300 hover:text-weddingGold-500 p-1 transition-all" title="메모 추가/편집">
+
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+
+                                </button>
+
+                                <button onclick="deleteTodoItem('${item.id}')" class="text-gray-300 hover:text-red-400 p-1 transition-all">
+
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        ${memoHtml}
+
+                        <div id="memo-edit-${item.id}" class="hidden ml-8 mt-2 flex gap-1.5 items-center bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
+
+                            <input type="text" id="memo-input-${item.id}" value="${(item.memo || '').replace(/"/g, '&quot;')}" placeholder="예: ㅇㅇ웨딩 ㅁㅁㅁ실장 (010-1234-5678)" class="flex-1 bg-white text-xs rounded-xl px-3 py-1.5 border border-weddingGold-200 focus:outline-none focus:ring-1 focus:ring-weddingGold-500 transition-all">
+
+                            <button onclick="saveTodoMemo('${item.id}')" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl transition-all">저장</button>
+
+                            <button onclick="toggleMemoEditor('${item.id}')" class="text-[11px] font-bold text-gray-400 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-all">취소</button>
+
+                        </div>
+
+                    `;
+
+                    itemWrapper.appendChild(row);
+
+                });
+
+
+
+                section.appendChild(itemWrapper);
+
+                container.appendChild(section);
+
+            });
+
+        }
+
+
+
+        window.toggleTodoStatus = (id) => {
+
+            const index = localState.checklist.findIndex(t => t.id === id);
+
+            if (index !== -1) {
+
+                localState.checklist[index].checked = !localState.checklist[index].checked;
+
+                renderChecklist();
+
+                saveData();
+
+            }
+
+        };
+
+
+
+        window.addCustomTodo = () => {
+
+            const input = document.getElementById('new-todo-title');
+
+            const select = document.getElementById('new-todo-period-select');
+
+            const customInput = document.getElementById('new-todo-period-custom');
+
+
+
+            const title = input.value.trim();
+
+            if(!title) {
+
+                showToast("추가할 스케줄 내용을 입력해주세요!", "warning");
+
+                return;
+
+            }
+
+
+
+            let period = select.value;
+
+            if (period === "__custom__") {
+
+                const customVal = customInput.value.trim();
+
+                if (!customVal) {
+
+                    showToast("직접 입력할 카테고리명을 채워 주세요!", "warning");
+
+                    return;
+
+                }
+
+                period = customVal;
+
+
+
+                if (!localState.periods.includes(period)) {
+
+                    localState.periods.push(period);
+
+                }
+
+            }
+
+
+
+            const newTodo = {
+
+                id: 'todo_' + Date.now(),
+
+                title: title,
+
+                checked: false,
+
+                period: period,
+
+                memo: ""
+
+            };
+
+            localState.checklist.push(newTodo);
+
+            
+
+            input.value = '';
+
+            customInput.value = '';
+
+            
+
+            renderChecklist();
+
+            updatePeriodDropdown();
+
+            saveData();
+
+            showToast(`"${period}" 그룹에 일정이 신규 기록되었습니다! 🌿`, "success");
+
+        };
+
+
+
+        window.deleteTodoItem = (id) => {
+
+            localState.checklist = localState.checklist.filter(t => t.id !== id);
+
+            renderChecklist();
+
+            saveData();
+
+            showToast("선택하신 일정이 삭제되었습니다.", "info");
+
+        };
+
+
+
+        function renderBudget() {
+
+            const container = document.getElementById('budget-items-container');
+
+            container.innerHTML = '';
+
+
+
+            let totalExpected = 0;
+
+            let totalSpent = 0;
+
+            let totalDeposit = 0;
+
+
+
+            localState.budget.forEach(item => {
+
+                totalExpected += item.expected;
+
+                totalSpent += item.spent;
+
+                totalDeposit += item.deposit;
+
+
+
+                const card = document.createElement('div');
+
+                card.className = "bg-white p-5 rounded-2xl shadow-[0_4px_15px_rgb(0,0,0,0.01)] border border-pink-100/10 hover:shadow-md transition-all";
+
+                
+
+                card.innerHTML = `
+
+                    <div class="flex justify-between items-center mb-3">
+
+                        <span class="text-sm font-bold text-gray-800">${item.name}</span>
+
+                        <button onclick="deleteBudgetItem('${item.id}')" class="text-gray-300 hover:text-red-400 p-1 transition-all">
+
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+
+                        </button>
+
+                    </div>
+
+                    
+
+                    <div class="grid grid-cols-3 gap-3">
+
+                        <div class="bg-gray-50/60 p-2.5 rounded-xl border border-gray-100/20">
+
+                            <span class="text-[9px] text-gray-400 block mb-1 font-semibold">예상 예산</span>
+
+                            <div class="flex items-center gap-0.5">
+
+                                <input type="number" value="${item.expected}" onchange="updateBudgetValue('${item.id}', 'expected', this.value)" class="w-full bg-transparent text-right text-xs font-bold text-gray-700 focus:outline-none p-0 border-none">
+
+                                <span class="text-[10px] text-gray-400">만</span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="bg-peach-100/10 p-2.5 rounded-xl border border-peach-200/10">
+
+                            <span class="text-[9px] text-peach-500 block mb-1 font-semibold">확정 지출</span>
+
+                            <div class="flex items-center gap-0.5">
+
+                                <input type="number" value="${item.spent}" onchange="updateBudgetValue('${item.id}', 'spent', this.value)" class="w-full bg-transparent text-right text-xs font-bold text-peach-500 focus:outline-none p-0 border-none">
+
+                                <span class="text-[10px] text-peach-400">만</span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="bg-[#F4F1DE]/40 p-2.5 rounded-xl border border-weddingGold-500/10">
+
+                            <span class="text-[9px] text-weddingGold-600 block mb-1 font-semibold">지불 계약금</span>
+
+                            <div class="flex items-center gap-0.5">
+
+                                <input type="number" value="${item.deposit}" onchange="updateBudgetValue('${item.id}', 'deposit', this.value)" class="w-full bg-transparent text-right text-xs font-bold text-weddingGold-500 focus:outline-none p-0 border-none">
+
+                                <span class="text-[10px] text-weddingGold-400">만</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+                container.appendChild(card);
+
+            });
+
+
+
+            const balance = Math.max(0, totalSpent - totalDeposit);
+
+
+
+            document.getElementById('summary-expected').innerText = `${totalExpected.toLocaleString()} 만원`;
+
+            document.getElementById('summary-spent').innerText = `${totalSpent.toLocaleString()} 만원`;
+
+            document.getElementById('summary-deposit').innerText = `${totalDeposit.toLocaleString()} 만원`;
+
+            document.getElementById('summary-balance').innerText = `${balance.toLocaleString()} 만원`;
+
+        }
+
+
+
+        window.updateBudgetValue = (id, field, value) => {
+
+            const index = localState.budget.findIndex(b => b.id === id);
+
+            if (index !== -1) {
+
+                const numericVal = parseInt(value) || 0;
+
+                localState.budget[index][field] = numericVal;
+
+                renderBudget();
+
+                saveData();
+
+            }
+
+        };
+
+
+
+        window.addCustomBudget = () => {
+
+            const nameInput = document.getElementById('new-budget-name');
+
+            const expectedInput = document.getElementById('new-budget-expected');
+
+
+
+            const name = nameInput.value.trim();
+
+            const expected = parseInt(expectedInput.value) || 0;
+
+
+
+            if(!name) {
+
+                showToast("추가할 장부 품목명을 명시해 주세요!", "warning");
+
+                return;
+
+            }
+
+
+
+            const newBudget = {
+
+                id: 'budget_' + Date.now(),
+
+                name: name,
+
+                expected: expected,
+
+                spent: 0,
+
+                deposit: 0
+
+            };
+
+
+
+            localState.budget.push(newBudget);
+
+            nameInput.value = '';
+
+            expectedInput.value = '';
+
+
+
+            renderBudget();
+
+            saveData();
+
+            showToast("예산 품목이 장부에 등록되었습니다. ✨", "success");
+
+        };
+
+
+
+        window.deleteBudgetItem = (id) => {
+
+            localState.budget = localState.budget.filter(b => b.id !== id);
+
+            renderBudget();
+
+            saveData();
+
+            showToast("선택하신 품목이 장부에서 제외되었습니다.", "info");
+
+        };
+
+
+
+        const apiKey = ""; 
+
+
+
+        async function callGeminiApi(prompt, systemInstruction) {
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const payload = {
+
+                contents: [{ parts: [{ text: prompt }] }],
+
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+
+            };
+
+
+
+            let delay = 1000;
+
+            for (let i = 0; i < 5; i++) {
+
+                try {
+
+                    const response = await fetch(url, {
+
+                        method: 'POST',
+
+                        headers: { 'Content-Type': 'application/json' },
+
+                        body: JSON.stringify(payload)
+
+                    });
+
+                    if (response.ok) {
+
+                        return await response.json();
+
+                    }
+
+                } catch (e) {
+
+                }
+
+                await new Promise(res => setTimeout(res, delay));
+
+                delay *= 2;
+
+            }
+
+            throw new Error("Gemini AI API 요청에 최종적으로 실패했습니다.");
+
+        }
+
+
+
+        window.generateAiChecklist = async () => {
+
+            const btn = document.getElementById('ai-todo-gen-btn');
+
+            const box = document.getElementById('ai-todo-box');
+
+            const listContainer = document.getElementById('ai-suggested-todos-list');
+
+
+
+            const weddingDateStr = localState.weddingDate || "2027-08-21";
+
+            const targetDate = new Date(weddingDateStr + "T00:00:00");
+
+            const today = new Date();
+
+            today.setHours(0,0,0,0);
+
+            const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+
+
+
+            btn.disabled = true;
+
+            btn.innerText = "✨ AI가 디데이를 토대로 추천 일정 수집 중...⏳";
+
+            box.classList.remove('hidden');
+
+            listContainer.innerHTML = `<div class="text-center text-gray-400 py-3 animate-pulse">현재 남은 기간(${diffDays}일)에 꼭 필요한 추천 체크리스트를 만들고 있습니다...</div>`;
+
+
+
+            const prompt = `현재 결혼식 본식까지 정확히 ${diffDays}일 남은 예비 신부 '예진'이입니다. 이 시기에 꼭 알아봐야 하거나 예약/준비해야 할 스마트하고 실속 있는 우선순위 체크리스트 3가지를 명확하게 추출해줘. 각 아이템에 어울리는 귀여운 이모티콘도 붙서 꼭 순수 JSON 리스트 포맷으로 돌려줘.
+
+            JSON 스키마 규격: [{"title": "내용", "period": "D-12개월"}] 형태로 기입해줘.`;
+
+
+
+            const systemPrompt = "너는 15년 차 최고의 프로 웨딩 플래너이며, JSON 양식 외에 어떠한 인사말이나 서론, 꼬리표 마크다운도 절대 반환하지 않는 정밀 가공 로봇이야. 반드시 완벽히 파싱 가능한 JSON 어레이만 생성해야 해.";
+
+
+
+            try {
+
+                const result = await callGeminiApi(prompt, systemPrompt);
+
+                let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+
+                text = text.substring(text.indexOf("["), text.lastIndexOf("]") + 1);
+
+                const items = JSON.parse(text);
+
+
+
+                listContainer.innerHTML = '';
+
+                if (items && items.length > 0) {
+
+                    items.forEach((item, idx) => {
+
+                        const todoItemDiv = document.createElement('div');
+
+                        todoItemDiv.className = "flex items-center justify-between bg-white p-2.5 rounded-xl border border-pink-100/30 shadow-sm";
+
+                        todoItemDiv.innerHTML = `
+
+                            <div class="flex flex-col">
+
+                                <span class="text-xs font-semibold text-gray-700">${item.title}</span>
+
+                                <span class="text-[9px] text-peach-500 font-medium">${item.period || '추천 단계'}</span>
+
+                            </div>
+
+                            <button onclick="addAiSuggestedTodo('${item.title.replace(/'/g, "\\'")}', '${item.period}')" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg transition-all flex items-center gap-0.5">
+
+                                ✨ 추가
+
+                            </button>
+
+                        `;
+
+                        listContainer.appendChild(todoItemDiv);
+
+                    });
+
+                } else {
+
+                    listContainer.innerHTML = `<p class="text-gray-400 text-center py-2">현재 기간에는 모든 체크리스트가 아주 여유롭습니다!</p>`;
+
+                }
+
+            } catch (err) {
+
+                listContainer.innerHTML = `<p class="text-red-500 text-center py-2">일정 추천을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>`;
+
+            } finally {
+
+                btn.disabled = false;
+
+                btn.innerText = "✨ AI 디데이 맞춤 일정 추천받기";
+
+            }
+
+        };
+
+
+
+        window.addAiSuggestedTodo = (title, period) => {
+
+            const newTodo = {
+
+                id: 'todo_' + Date.now(),
+
+                title: title,
+
+                checked: false,
+
+                period: period || "기타 일정",
+
+                memo: ""
+
+            };
+
+            localState.checklist.push(newTodo);
+
+            
+
+            if (!localState.periods.includes(newTodo.period)) {
+
+                localState.periods.push(newTodo.period);
+
+            }
+
+            
+
+            renderChecklist();
+
+            updatePeriodDropdown();
+
+            saveData();
+
+            showToast(`"${title}" 일정이 정상 추가되었습니다! 🌸`, "success");
+
+        };
+
+
+
+        window.analyzeBudgetWithAi = async () => {
+
+            const btn = document.getElementById('ai-budget-btn');
+
+            const analysisBox = document.getElementById('ai-budget-analysis');
+
+
+
+            if (!localState.budget || localState.budget.length === 0) {
+
+                showToast("분석할 예산 항목이 존재하지 않습니다. 품목을 먼저 추가해 주세요!", "warning");
+
+                return;
+
+            }
+
+
+
+            btn.disabled = true;
+
+            btn.innerText = "✨ AI 플래너가 지출 내역을 현명하게 분석 중...⏳";
+
+            analysisBox.classList.remove('hidden');
+
+            analysisBox.innerHTML = `<div class="flex items-center gap-2 text-gray-400 justify-center py-4"><svg class="w-5 h-5 animate-spin text-weddingGold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-5.5"></path></svg> <span>작성된 장부를 분석해 스마트 다이어트 팁을 도출하고 있습니다...</span></div>`;
+
+
+
+            const budgetDataSummary = localState.budget.map(b => `- ${b.name}: 예상(${b.expected}만원), 실지출(${b.spent}만원), 계약금(${b.deposit}만원)`).join('\n');
+
+
+
+            const prompt = `예비 신부 예진이의 결혼 예산 내역서입니다:\n${budgetDataSummary}\n\n이 예산을 토대로 15년차 웨딩플래너 체리로서 예진이에게 '가장 추가금이 많이 발생할 것 같은 유의 항목'과 '예산을 세이브할 수 있는 실무적인 다이어트 조언 3가지'를 친절하고 든든한 반말/존댓말 적절히 섞인 다정한 어투로 제공해 줘.`;
+
+            const systemPrompt = "너는 웨딩 업계의 뒷이야기와 추가금 방어 비법을 꿰뚫고 있는 엄청 상냥하고 똑똑한 실전파 플래너 '체리'야. 문맥 정돈이 예쁘고 따스한 느낌을 유지하도록 작성해 줘.";
+
+
+
+            try {
+
+                const result = await callGeminiApi(prompt, systemPrompt);
+
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (text) {
+
+                    analysisBox.innerHTML = `
+
+                        <div class="border-b border-weddingGold-500/10 pb-2 mb-3">
+
+                            <span class="font-bold text-weddingGold-600 text-xs">🍒 체리 플래너의 예산 진단 진술서</span>
+
+                        </div>
+
+                        <div class="leading-relaxed text-gray-600">${parseMarkdownToHtml(text)}</div>
+
+                    `;
+
+                } else {
+
+                    analysisBox.innerText = "진단을 작성하지 못했습니다. 잠시 후 다시 조회를 요청해 주세요.";
+
+                }
+
+            } catch (err) {
+
+                analysisBox.innerText = "오류로 진단을 전송하지 못했습니다: " + err.message;
+
+            } finally {
+
+                btn.disabled = false;
+
+                btn.innerText = "✨ AI 예산 다이어트 진단받기";
+
+            }
+
+        };
+
+
+
+        window.generateAiInvitation = async () => {
+
+            const groom = document.getElementById('ai-groom-name').value.trim() || "신랑";
+
+            const bride = document.getElementById('ai-bride-name').value.trim() || "예진";
+
+            const vibe = document.getElementById('ai-invitation-vibe').value;
+
+            const season = document.getElementById('ai-invitation-season').value;
+
+
+
+            const btn = document.getElementById('ai-invitation-btn');
+
+            const resBox = document.getElementById('ai-response-box');
+
+
+
+            btn.disabled = true;
+
+            btn.innerText = "✨ 아름다운 초대글을 작사하는 중... ✍️";
+
+            resBox.classList.remove('hidden');
+
+            resBox.innerHTML = `<div class="flex items-center gap-2 text-gray-400 justify-center py-4"><svg class="w-5 h-5 animate-spin text-weddingGold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-5.5"></path></svg> <span>${season}을 품은 청첩장 문구를 구상하는 중입니다...</span></div>`;
+
+
+
+            const prompt = `신랑 ${groom}군 and 신부 ${bride}양의 모바일 청첩장 초대장 서두 인사말을 작성해 줘.
+
+            전체적인 톤앤무드: ${vibe} 분위기
+
+            예식 시점 묘사: ${season}
+
+            청첩장에 바로 복사해서 붙여넣을 수 있도록 불필요한 서론 없이 가독성이 높고 줄바꿈이 정갈한 메인 본문(3~5문단 정도)과 시적인 한 줄 슬로건 타이틀을 완벽하게 디자인해서 돌려줘.`;
+
+
+
+            const systemPrompt = "너는 사랑을 아름다운 글자로 자아내는 최고의 감성 카피라이터이자 웨딩 컨설턴트야. 읽는 하객들이 잔잔한 미소를 지을 수 있도록 정갈하고 예쁘게 가공해서 문구만을 반환해 줘.";
+
+
+
+            try {
+
+                const result = await callGeminiApi(prompt, systemPrompt);
+
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (text) {
+
+                    resBox.innerHTML = `
+
+                        <div class="border-b border-[#E07A5F]/10 pb-3 mb-4 text-center">
+
+                            <span class="text-xs font-bold text-[#E07A5F]">💌 복사 가능한 모바일 청첩장 추천 문구</span>
+
+                        </div>
+
+                        <div class="text-center font-serif py-2 text-gray-700 leading-loose">${text.replace(/\n/g, '<br>')}</div>
+
+                    `;
+
+                } else {
+
+                    resBox.innerText = "초대글을 생성하지 못했습니다. 다시 시도해 주세요.";
+
+                }
+
+            } catch (err) {
+
+                resBox.innerText = "초대글 생성 중 오류가 발생했습니다: " + err.message;
+
+            } finally {
+
+                btn.disabled = false;
+
+                btn.innerText = "✨ 모바일 초대 문구 자동 생성하기";
+
+            }
+
+        };
+
+
+
+        window.setAiQuery = (query) => {
+
+            document.getElementById('ai-input').value = query;
+
+        };
+
+
+
+        window.askAiPlanner = async () => {
+
+            const input = document.getElementById('ai-input');
+
+            const query = input.value.trim();
+
+            if(!query) {
+
+                showToast("궁금하신 사항을 입력해주세요!", "warning");
+
+                return;
+
+            }
+
+
+
+            const sendBtn = document.getElementById('send-ai-btn');
+
+            const resBox = document.getElementById('ai-response-box');
+
+
+
+            sendBtn.disabled = true;
+
+            sendBtn.innerText = "⏳";
+
+            resBox.classList.remove('hidden');
+
+            resBox.innerHTML = `<div class="flex items-center gap-2 text-gray-400 justify-center py-4"><svg class="w-5 h-5 animate-spin text-weddingGold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-5.5"></path></svg> <span>웨딩 플래너 체리가 노하우를 정리하고 있습니다...</span></div>`;
+
+
+
+            const systemPrompt = "너는 친절하고 경력 15년 차의 베테랑 웨딩 플래너 '체리'야. 결혼을 앞둔 '예진'이에게 따스하고 아기자기하며, 신부를 격려해주는 다정한 톤으로 정량적인 예산 절약 꿀팁, 스케줄 관리 요령을 정리해서 설명해줘. 이모티콘도 다정하게 섞어 써줘.";
+
+
+
+            try {
+
+                const result = await callGeminiApi(query, systemPrompt);
+
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if(text) {
+
+                    resBox.innerHTML = parseMarkdownToHtml(text);
+
+                } else {
+
+                    resBox.innerText = "답변 작성 양식을 수신하지 못했습니다. 다시 물어봐 주세요!";
+
+                }
+
+            } catch (err) {
+
+                resBox.innerText = "오류 발생: " + err.message;
+
+            } finally {
+
+                sendBtn.disabled = false;
+
+                sendBtn.innerText = "질문";
+
+            }
+
+        };
+
+
+
+        function parseMarkdownToHtml(markdown) {
+
+            let html = markdown
+
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+
+                .replace(/### (.*?)\n/g, '<h4 class="text-xs font-extrabold text-weddingSage mt-4 mb-1 border-b pb-1">$1</h4>')
+
+                .replace(/## (.*?)\n/g, '<h3 class="text-sm font-bold text-weddingGold-600 mt-5 mb-1.5">$1</h3>')
+
+                .replace(/# (.*?)\n/g, '<h2 class="text-base font-bold text-gray-800 mt-6 mb-2">$1</h2>')
+
+                .replace(/- (.*?)\n/g, '<li class="ml-4 list-disc text-xs text-gray-600 my-1">$1</li>');
+
+            return html;
+
+        }
+
+
+
+        window.showToast = (msg, type = "success") => {
+
+            const container = document.getElementById('toast-container');
+
+            const toast = document.createElement('div');
+
+            
+
+            let bg = "bg-emerald-50 border-emerald-100 text-emerald-800";
+
+            let icon = `<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
+            
+
+            if (type === "error") {
+
+                bg = "bg-rose-50 border-rose-100 text-rose-800";
+
+                icon = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+
+            } else if (type === "warning") {
+
+                bg = "bg-amber-50 border-amber-100 text-amber-800";
+
+                icon = `<svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+
+            } else if (type === "info") {
+
+                bg = "bg-sky-50 border-sky-100 text-sky-800";
+
+                icon = `<svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
+            }
+
+
+
+            toast.className = `p-4 rounded-2xl border flex items-start gap-3 shadow-lg transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${bg}`;
+
+            toast.innerHTML = `
+
+                ${icon}
+
+                <div class="flex-1 text-xs font-semibold">${msg}</div>
+
+            `;
+
+            container.appendChild(toast);
+
+
+
+            setTimeout(() => {
+
+                toast.classList.remove('translate-y-2', 'opacity-0');
+
+            }, 50);
+
+
+
+            setTimeout(() => {
+
+                toast.classList.add('translate-y-2', 'opacity-0');
+
+                setTimeout(() => toast.remove(), 300);
+
+            }, 3000);
+
+        };
+
+
+
+        window.switchTab = (tabName) => {
+
+            const tabs = ["checklist", "budget", "ai"];
+
+            tabs.forEach(t => {
+
+                const sec = document.getElementById(`sec-${t}`);
+
+                const btn = document.getElementById(`tab-${t}`);
+
+                if (t === tabName) {
+
+                    sec.classList.remove('hidden');
+
+                    btn.className = "flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all bg-weddingGold-500 text-white shadow-sm";
+
+                } else {
+
+                    sec.classList.add('hidden');
+
+                    btn.className = "flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all text-gray-400 hover:text-gray-700";
+
+                }
+
+            });
+
+        };
+
+
+
+        window.onload = async () => {
+
+            const offlineData = localStorage.getItem('wedding_planner_local_state_v2');
+
+            if (offlineData) {
+
+                try {
+
+                    localState = JSON.parse(offlineData);
+
+                } catch(e) {}
+
+            }
+
+
+
+            if (!localState.periods || localState.periods.length === 0) {
+
+                localState.periods = ["D-15개월", "D-12개월", "D-10개월", "D-9개월", "D-6개월", "D-4개월", "D-3개월", "D-1개월", "기타 일정"];
+
+            }
+
+            if (!localState.mainTitle) localState.mainTitle = "Our Wedding Journal";
+
+            if (!localState.subTitle) localState.subTitle = "예진이의 소중한 결혼 준비 기록장";
+
+
+
+            renderApp();
+
+            updatePeriodDropdown();
+
+
+
+            if (useFirebase) {
+
+                await initAuth();
+
+                onAuthStateChanged(auth, async (user) => {
+
+                    handleUserLoginUI(user);
+
+                    if (user) {
+
+                        // Realtime Database 실시간 갱신 수신 동기화 리스너 바인딩 (RULE 3 준수)
+
+                        const dbRef = ref(db, `artifacts/${appId}/users/${user.uid}/weddingState/main`);
+
+                        onValue(dbRef, (snapshot) => {
+
+                            const data = snapshot.val();
+
+                            if (data) {
+
+                                localState = data;
+
+                                if (!localState.periods || localState.periods.length === 0) {
+
+                                    localState.periods = ["D-15개월", "D-12개월", "D-10개월", "D-9개월", "D-6개월", "D-4개월", "D-3개월", "D-1개월", "기타 일정"];
+
+                                }
+
+                                if (!localState.mainTitle) localState.mainTitle = "Our Wedding Journal";
+
+                                if (!localState.subTitle) localState.subTitle = "예진이의 소중한 결혼 준비 기록장";
+
+                                renderApp();
+
+                                updatePeriodDropdown();
+
+                                updateSyncStatus('synced');
+
+                            } else {
+
+                                saveData();
+
+                            }
+
+                        }, (err) => {
+
+                            console.error("Database sync failed:", err);
+
+                        });
+
+                    }
+
+                });
+
+            }
+
+
+
+            document.getElementById('auth-btn').onclick = window.handleAuthAction;
+
+        };
+
+
+
+    </script>
+
 </body>
+
 </html>
