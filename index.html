@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>웨딩 플래너💍</title>
+    <title>예진이의 웨딩 플래너 💍</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -48,6 +48,60 @@
 
     <!-- Toast 알림 레이아웃 -->
     <div id="toast-container" class="fixed top-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none"></div>
+
+    <!-- 커스텀 컨펌(확인) 모달 -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-pink-100/50 space-y-4">
+            <h3 id="confirm-title" class="text-sm font-bold text-gray-800">💍 확인해 주세요</h3>
+            <p id="confirm-message" class="text-xs text-gray-500 leading-relaxed whitespace-pre-wrap"></p>
+            <div class="flex gap-2 justify-end pt-2">
+                <button id="confirm-cancel-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">취소</button>
+                <button id="confirm-ok-btn" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase 자가 연동 마법사 모달 -->
+    <div id="firebase-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-pink-100/50 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                    🔗 구글 실시간 클라우드(Firebase) 연동
+                </h3>
+                <button onclick="closeFirebaseModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <p class="text-[11px] text-gray-500 leading-relaxed bg-weddingGold-50 p-3 rounded-2xl border border-weddingGold-500/10">
+                깃허브 웹사이트에서 <strong>구글 로그인</strong> 및 스마트폰-노트북 간의 <strong>실시간 자동 동기화</strong>를 사용하고 싶다면, 구글에서 무료로 제공하는 Firebase 설정 정보를 아래에 등록해 주세요!
+            </p>
+
+            <div class="space-y-2 text-[11px] text-gray-600">
+                <p class="font-bold text-gray-700">💡 1분 연동 방법 가이드:</p>
+                <ol class="list-decimal pl-4 space-y-1.5">
+                    <li>구글에 <strong class="text-weddingGold-600">Firebase 콘솔</strong>을 검색하고 로그인합니다.</li>
+                    <li><strong>'프로젝트 추가'</strong>를 눌러 무료 프로젝트를 하나 생성합니다.</li>
+                    <li>중앙의 <strong>&lt;/&gt; (웹) 아이콘</strong>을 클릭하여 내 앱 이름을 적고 등록합니다.</li>
+                    <li>화면에 등장하는 <code class="bg-gray-100 px-1 py-0.5 rounded text-rose-500">const firebaseConfig = { ... }</code> 코드 내용을 통째로 복사해서 아래 입력란에 붙여넣기 해주세요!</li>
+                </ol>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-[11px] font-bold text-gray-600">📋 Firebase Config JSON 또는 객체 입력:</label>
+                <textarea id="input-firebase-config" placeholder='{\n  "apiKey": "AIzaSy...",\n  "authDomain": "your-app.firebaseapp.com",\n  "projectId": "your-app",\n  "storageBucket": "your-app.appspot.com",\n  "messagingSenderId": "...",\n  "appId": "..."\n}' class="w-full h-32 bg-gray-50 border border-gray-200 rounded-2xl p-3 text-[10px] font-mono focus:outline-none focus:ring-1 focus:ring-weddingGold-500"></textarea>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="clearUserFirebaseConfig()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">
+                    초기화
+                </button>
+                <button onclick="saveUserFirebaseConfig()" class="flex-1 bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold py-2.5 rounded-xl transition-all">
+                    연동 테스트 및 저장하기
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- 메인 컨테이너 -->
     <div class="w-full max-w-lg px-4 mt-6">
@@ -98,9 +152,13 @@
                     <input type="text" id="input-sub-title" placeholder="예진이의 소중한 결혼 준비 기록장" class="w-full bg-white border border-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-weddingGold-500">
                 </div>
 
-                <div class="flex gap-2 justify-end pt-1">
-                    <button onclick="toggleSettingsEditor()" class="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition-all">취소</button>
-                    <button onclick="saveSettings()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">저장하기</button>
+                <div class="flex gap-2 justify-between pt-2 border-t border-peach-200/30">
+                    <!-- 클라우드 연동 정보 보기 버튼 -->
+                    <button onclick="openFirebaseModal()" class="text-[10px] text-weddingGold-600 underline font-semibold">🔗 클라우드 데이터베이스 설정</button>
+                    <div class="flex gap-1.5">
+                        <button onclick="toggleSettingsEditor()" class="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-2 rounded-xl transition-all">취소</button>
+                        <button onclick="saveSettings()" class="bg-weddingGold-500 hover:bg-weddingGold-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">저장하기</button>
+                    </div>
                 </div>
             </div>
 
@@ -315,6 +373,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-wedding-planner';
         let useFirebase = false;
         let db, auth;
+        let firebaseConfig = null;
 
         // 초기의 따스하고 유용한 기본 결혼 일정 및 예산장 복원 (메모 기본값 마이그레이션)
         let localState = {
@@ -341,21 +400,28 @@
             ]
         };
 
-        // Firebase 이니셜라이징
+        // Firebase 이니셜라이징 우선순위 정렬 (플랫폼 config -> 로컬 저장 config)
         try {
             if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                const firebaseConfig = JSON.parse(__firebase_config);
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                const userConfigStr = localStorage.getItem('user_firebase_config');
+                if (userConfigStr) {
+                    firebaseConfig = JSON.parse(userConfigStr);
+                }
+            }
+
+            if (firebaseConfig) {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 useFirebase = true;
-                console.log("Firebase initialized.");
+                console.log("Firebase initialized successfully.");
             } else {
-                throw new Error("Config unprovided.");
+                throw new Error("No config provided.");
             }
         } catch (e) {
             console.warn("Using offline state cache mode: " + e.message);
-            updateSyncStatus('offline');
         }
 
         let currentUser = null;
@@ -375,6 +441,91 @@
                 syncIcon.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> <span>로컬 디스크 임시 오프라인 모드</span>`;
             }
         }
+
+        // 커스텀 모달 기반 확인 창 유틸리티 (아이프레임 충돌 방지)
+        window.showConfirm = (title, message, onOk) => {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            
+            const okBtn = document.getElementById('confirm-ok-btn');
+            const cancelBtn = document.getElementById('confirm-cancel-btn');
+            
+            const close = () => {
+                modal.classList.add('hidden');
+            };
+            
+            okBtn.onclick = () => {
+                onOk();
+                close();
+            };
+            
+            cancelBtn.onclick = close;
+            modal.classList.remove('hidden');
+        };
+
+        // Firebase 자가 연동 마법사 제어 함수
+        window.openFirebaseModal = () => {
+            document.getElementById('firebase-modal').classList.remove('hidden');
+            const savedConfig = localStorage.getItem('user_firebase_config');
+            if (savedConfig) {
+                document.getElementById('input-firebase-config').value = savedConfig;
+            }
+        };
+
+        window.closeFirebaseModal = () => {
+            document.getElementById('firebase-modal').classList.add('hidden');
+        };
+
+        // Firebase 유저 커스텀 설정정보 연동 및 저장
+        window.saveUserFirebaseConfig = () => {
+            const configText = document.getElementById('input-firebase-config').value.trim();
+            if (!configText) {
+                showToast("Firebase 설정 정보를 입력란에 붙여넣어 주세요!", "warning");
+                return;
+            }
+
+            try {
+                // 객체 형태 또는 JSON 파싱 테스트
+                let parsedConfig;
+                if (configText.startsWith('{')) {
+                    parsedConfig = JSON.parse(configText);
+                } else {
+                    // JavaScript 객체 형식일 때 JSON으로 변환 시도
+                    const jsObjStr = configText
+                        .replace(/const\s+firebaseConfig\s+=\s+/g, '')
+                        .replace(/let\s+firebaseConfig\s+=\s+/g, '')
+                        .replace(/var\s+firebaseConfig\s+=\s+/g, '')
+                        .replace(/;/g, '')
+                        .replace(/([a-zA-Z0-9_]+)\s*:/g, '"$1":')
+                        .replace(/'/g, '"');
+                    parsedConfig = JSON.parse(jsObjStr);
+                }
+
+                if (!parsedConfig.apiKey || !parsedConfig.projectId) {
+                    throw new Error("apiKey 및 projectId 필수 누락");
+                }
+
+                // 로컬 스토리지 보존 및 새로고침 진행
+                localStorage.setItem('user_firebase_config', JSON.stringify(parsedConfig, null, 2));
+                showToast("Firebase 정보 설정 완료! 실시간 클라우드를 활성화하기 위해 사이트를 새로고침합니다.", "success");
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } catch (err) {
+                console.error(err);
+                showToast("올바른 Firebase Config 정보가 아닙니다. 설명 가이드를 참고하여 JSON 형식 객체만 기입해 주세요.", "error");
+            }
+        };
+
+        // 유저 Firebase 연동 초기화(해제)
+        window.clearUserFirebaseConfig = () => {
+            showConfirm("Firebase 연동 해제", "등록된 개인 데이터베이스 설정을 삭제하고 오프라인 캐시 모드로 돌아가시겠습니까?", () => {
+                localStorage.removeItem('user_firebase_config');
+                showToast("연동 정보 삭제 완료. 오프라인 모드로 변경하기 위해 새로고침합니다.", "success");
+                setTimeout(() => location.reload(), 1500);
+            });
+        };
 
         // 2. Auth 로그인 세션 빌드 (RULE 3 준수)
         const initAuth = async () => {
@@ -422,17 +573,18 @@
         // 구글 로그인 진행
         window.handleAuthAction = async () => {
             if (!useFirebase) {
-                showToast("현재 오프라인 로컬 저장소 모드 상태입니다.", "info");
+                // 오프라인 상태일 시, 사용자 편의를 위해 연동 가이드를 즉시 오픈합니다.
+                openFirebaseModal();
                 return;
             }
             const user = auth.currentUser;
             if (!user) return;
 
             if (!user.isAnonymous) {
-                if (confirm("정말 로그아웃 하시겠습니까?")) {
+                showConfirm("로그아웃", "정말 연동을 해제(로그아웃)하시겠습니까?", async () => {
                     await signOut(auth);
                     showToast("로그아웃 되었습니다.", "info");
-                }
+                });
                 return;
             }
 
@@ -558,6 +710,7 @@
         // 카테고리 이름 변경 취소
         window.disablePeriodEdit = (period) => {
             const safeId = getSafeId(period);
+            document.getElementById(`period-header-view-${safeId}`).text = period;
             document.getElementById(`period-header-view-${safeId}`).classList.remove('hidden');
             document.getElementById(`period-header-edit-${safeId}`).classList.add('hidden');
         };
@@ -605,7 +758,7 @@
                 return;
             }
 
-            if (confirm(`"${period}" 카테고리를 정말 삭제하시겠습니까?\n이 카테고리 안에 있는 할 일들은 '기타 일정' 카테고리로 안전하게 이동됩니다.`)) {
+            showConfirm("카테고리 삭제 확인", `"${period}" 카테고리를 정말 삭제하시겠습니까?\n이 카테고리 안에 있는 할 일들은 '기타 일정' 카테고리로 안전하게 이동됩니다.`, () => {
                 // 카테고리에서 제거
                 localState.periods = localState.periods.filter(p => p !== period);
 
@@ -625,7 +778,7 @@
                 updatePeriodDropdown();
                 saveData();
                 showToast(`"${period}" 그룹이 삭제되었습니다. 안의 세부 일정들은 '기타 일정'으로 재정렬되었습니다.`, "info");
-            }
+            });
         };
 
         // 카테고리 드롭다운 리스트 동적 리프레시
@@ -1224,7 +1377,7 @@
 
         function parseMarkdownToHtml(markdown) {
             let html = markdown
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .replace(/### (.*?)\n/g, '<h4 class="text-xs font-extrabold text-weddingSage mt-4 mb-1 border-b pb-1">$1</h4>')
                 .replace(/## (.*?)\n/g, '<h3 class="text-sm font-bold text-weddingGold-600 mt-5 mb-1.5">$1</h3>')
