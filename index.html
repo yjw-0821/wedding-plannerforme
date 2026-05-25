@@ -1332,6 +1332,51 @@
                 }
             });
         };
+        [input]
+        // 💾 데이터 파일로 내보내기 (다운로드)
+window.exportData = () => {
+    // 로컬 데이터를 JSON 문자열로 변환
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localState));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    
+    // 다운로드되는 파일명 설정
+    downloadAnchorNode.setAttribute("download", "our_wedding_journal_backup.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    
+    showToast("데이터가 안전하게 기기에 다운로드되었습니다! 💾", "success");
+};
+
+// 📂 파일 불러와서 데이터 복구하기
+window.importData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const importedState = JSON.parse(e.target.result);
+            // 기본적인 데이터 유효성 검사 (웨딩 앱 백업 파일이 맞는지 확인)
+            if (importedState && importedState.weddingDate && importedState.checklist) {
+                localState = importedState;
+                saveData(); // 로컬 스토리지에 덮어쓰기
+                renderApp(); // 화면 새로고침
+                updatePeriodDropdown();
+                showToast("기록장을 성공적으로 불러왔습니다! 🌸", "success");
+            } else {
+                showToast("올바른 웨딩 플래너 백업 파일이 아닙니다.", "error");
+            }
+        } catch (err) {
+            showToast("파일을 읽는 중 오류가 발생했습니다.", "error");
+        }
+    };
+    reader.readAsText(file);
+    
+    // 파일 선택 초기화 (같은 파일을 다시 불러올 수 있도록)
+    event.target.value = '';
+};
 
         window.onload = async () => {
             const offlineData = localStorage.getItem('wedding_planner_local_state_v2');
